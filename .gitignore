@@ -1,0 +1,6 @@
+build*
+examples/build*
+examples/CMakeUserPresets.json
+CMakeUserPresets.json
+.vscode
+Testing

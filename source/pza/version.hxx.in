@@ -1,0 +1,3 @@
+#pragma once
+
+#define PZACXX_VERSION "@PROJECT_VERSION@"

@@ -1,0 +1,9 @@
+{
+    "good": {
+        "url": "localhost",
+        "port": 1883,
+        "interfaces": {
+            "psu": "pza/machine/py.psu.fake/My Psu"
+        }
+    }
+}
