@@ -23,6 +23,8 @@ set(SPDLOG_BUILD_SHARED ON CACHE INTERNAL "")
 FetchContent_MakeAvailable(spdlog)
 unset(SPDLOG_BUILD_SHARED)
 
+FetchContent_MakeAvailable(json)
+
 set(mosquittopp_INCLUDE_DIRS
     ${mosquitto_SOURCE_DIR}/include
     ${mosquitto_SOURCE_DIR}/lib/cpp
@@ -40,6 +42,10 @@ set(spdlog_INCLUDE_DIRS
 
 set(spdlog_LIB_DIRS
     ${spdlog_BINARY_DIR}
+)
+
+set(spdlog_INCLUDE_DIRS
+    ${json_SOURCE_DIR}/include
 )
 
 add_compile_options(-Wall -Wextra)

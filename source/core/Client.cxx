@@ -11,13 +11,10 @@ Client::Client(const std::string &addr, int port)
 
 Client::Client(const std::string &aliasName)
 {
-    const Core::Alias *alias;
-    
-    alias = Core::Get().findAlias(aliasName);
-    if (alias) {
-        _alias = alias;
-        _addr = alias->url;
-        _port = alias->port;
+    _alias = Core::Get().findAlias(aliasName);
+    if (_alias) {
+        _addr = _alias->url;
+        _port = _alias->port;
     }
     else {
         spdlog::warn("Setting client back to default values");
@@ -36,7 +33,6 @@ void Client::on_connect(int rc)
         case MOSQ_ERR_SUCCESS:
             _connected = true;
             spdlog::info("Connected to {:s} on port {:d}", _addr.c_str(), _port);
-            discover();
             break;
         default:
             _connected = false;
@@ -83,7 +79,7 @@ int Client::disconnect(void)
     return mosqpp::mosquittopp::disconnect();
 }
 
-int Client::subscribe(const std::string &topic, const std::function<void(const std::string &payload)> &f)
+int Client::subscribe(const std::string &topic, const std::function<void(const std::string &lol, const std::string &payload)> &f)
 {
     int ret;
     std::string s = topic;
@@ -125,46 +121,115 @@ void Client::on_message(const struct mosquitto_message *msg)
 {
     std::string topic = msg->topic;
 
+    if (msg->payload == nullptr)
+        return ;
+
+    spdlog::trace("Received message: {:s} : {:s}", msg->topic, (char *)msg->payload);
+
     if (_listeners.count(topic) > 0) {
         spdlog::trace("Found listener for \"{:s}\"", topic);
-        _listeners[topic]((char *)msg->payload);
+        _listeners[topic](topic, (char *)msg->payload);
     }
     else {
         forEachListener([&](const std::string &name) {
-            if (fnmatch(name.c_str(), topic.c_str(), FNM_PATHNAME) == 0)
-                _listeners[name]((char *)msg->payload);
+            if (fnmatch(name.c_str(), topic.c_str(), FNM_PATHNAME) == 0) {
+                _listeners[name](topic, (char *)msg->payload);
+            }
         });
     }
 }
 
-bool Client::interfaceIsRegistered(const std::string &topic)
+bool Client::registerInterface(Interface &interface, const std::string &name)
 {
-    return (_interfaces.count(topic) != 0) ? true : false;
+    bool ret = false;
+    std::string &baseTopic = (std::string &)name;
+
+    if (Utils::String::StartsWith(name, "pza/") == false) {
+        // is an alias
+        if (_alias && _alias->interfaces.count(name) > 0) {
+            baseTopic = _alias->interfaces[name];
+            interface.setBaseTopic(baseTopic);
+        }
+        else {
+            spdlog::info("Alias {:s} not found.", name);
+            return false;
+        }
+    }
+    if (_scanResult.count(baseTopic)) {
+        _interfaces[baseTopic] = &interface;
+        ret = true;
+    }
+    return ret;
 }
 
 void Client::forEachInterface(const std::function<void(Interface &interface)> &f)
 {
     for (auto &item : _interfaces) {
-        f(item.second);
+        f(*item.second);
     }
 }
 
 void Client::forEachListener(const std::function<void(const std::string&)> &f)
 {
-    for (auto &item : _listeners) {
+    for (auto const &item : _listeners) {
         f(item.first);
     }
 }
 
-void Client::on_info(const std::string &payload)
+void Client::on_scan(const std::string &topic, const std::string &payload)
 {
-    printf("%p\n", this);
+    json data;
+
+    data = json::parse(payload);
+    if (Utils::Json::KeyExists(data, "info") && Utils::Json::KeyExists(data["info"], "type")) {
+        data = data["info"];
+        if (data["type"] == "platform" && !Utils::Json::ToInteger(data, "interfaces", _scanCountPlatform)) {
+                _scanResult.emplace(topic.substr(0, topic.find("/atts/info")));
+                _scanCountInterfaces++;
+        }
+        else {
+            _scanResult.emplace(topic.substr(0, topic.find("/atts/info")));
+            _scanCountInterfaces++;
+        }
+        _cv.notify_one();
+    }
 }
 
-void Client::discover(void)
+void Client::showScanResults(void)
 {
-    subscribe("pza/+/+/+/atts/info", std::bind(&Client::on_info, this, std::placeholders::_1));
+    spdlog::info("--- Scan results ---");
+    spdlog::info("Interface count: {:d}", _scanCountInterfaces);
+    spdlog::info("List:");
+    for (auto it = _scanResult.begin(); it != _scanResult.end(); it++) {
+        spdlog::info("  Interface {:02d}: {:s}", std::distance(_scanResult.begin(), it), *it);
+    }
+    spdlog::info("--------------------");
+}
+
+void Client::scan(int timeout)
+{
+    std::mutex cv_m;
+    std::unique_lock l(cv_m);
+
+    using namespace std::chrono_literals;
+
+    _scanCountInterfaces = 0;
+    _scanCountPlatform = 0;
+    _scanResult.clear();
+    spdlog::info("Start scanning...");
+    subscribe("pza/+/+/+/+/info", std::bind(&Client::on_scan, this, std::placeholders::_1, std::placeholders::_2));
     publish("pza", "*");
+    auto const _scanComplete = [&](){ return (_scanCountInterfaces != 0 && _scanCountInterfaces == _scanCountPlatform); };
+    if (_cv.wait_for(l, std::chrono::seconds(timeout), _scanComplete) == false) {
+        if (_scanCountPlatform == 0)
+            spdlog::error("No Panduza platform seems to be running on the server.");
+        else
+            spdlog::warn("Scan didn't finish after {:d} seconds. Found {:d} interfaces but expected {:d}.", timeout, _scanCountInterfaces, _scanCountPlatform);
+    }
+    else {
+        spdlog::info("Scan successful! Found {:d} interfaces.", _scanCountInterfaces);
+    }
+    showScanResults();
 }
 
 Client::~Client()

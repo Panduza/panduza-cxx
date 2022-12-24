@@ -1,26 +1,38 @@
 #pragma once
 
 #include <iostream>
+#include <unordered_map>
 
 #include <core/Topic.hxx>
+#include <core/Attribute.hxx>
 
 class Client;
 
 class Interface
 {
-public:
-    Interface(const Client &client, const Topic &topic);
-    ~Interface();
 
-    const std::string &name(void) { return _topic.interface; }
+    friend class Client;
 
-    void setThreat(bool state) { _threatened = state;}
-    bool isThreatened(void) const { return _threatened;}
+protected:
+    Interface(Client &client, const std::string &name);
 
-    void on_message(const std::string &payload);
+    const std::string &name(void) { return _topic.interface(); }
+
+    Attribute &addAttribute(const std::string &name);
 
 private:
-    const Client &_client;
-    const Topic &_topic;
-    bool _threatened;
+    enum class eState {
+        Init,
+        Run,
+        Error
+    };
+    
+    void on_message(const std::string &payload);
+    void setBaseTopic(const std::string &name) { _baseTopic = name; }
+    
+    std::unordered_map<std::string, Attribute> _attributes;
+    std::string _baseTopic;
+    Client &_client;
+    Topic _topic;
+    eState _state;
 };

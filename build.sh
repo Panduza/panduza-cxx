@@ -1,5 +1,6 @@
 #!/bin/bash
 
+rm -rf build/bin/test
 mkdir -p build
 pushd build
 if [ "$1" ] && [ $1 -eq "1" ]

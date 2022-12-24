@@ -70,19 +70,19 @@ public:
     const std::unordered_map<std::string, Alias> &aliases(void) const { return _aliases; }
     static void ShowAliases()
     {
+        spdlog::info("--------- Aliases ---------");
         for (auto const &item : Core::Get().aliases()) {
-            std::cout << "Alias" << std::endl;
-            std::cout << "\tName:" << item.second.name << std::endl;
-            std::cout << "\tUrl :" << item.second.url << std::endl;
-            std::cout << "\tPort:" << item.second.port << std::endl;
-            std::cout << "\tInterfaces:" << std::endl;
+            spdlog::info("Name: {:s}", item.second.name);
+            spdlog::info("Url : {:s}", item.second.url);
+            spdlog::info("Port: {:d}", item.second.port);
+            spdlog::info("Interfaces:");
             for (auto const &itf : item.second.interfaces) {
-                std::cout << "\t\t" << itf.first << " : " << itf.second << std::endl;
+                spdlog::info("  {:s} : {:s}", itf.first, itf.second);
             }
-            std::cout << std::endl;
         }
+        spdlog::info("---------------------------");
     }
-    const Alias *findAlias(const std::string &name);
+    Alias *findAlias(const std::string &name);
 
 private:
     static int _LoadInterfaces(const json &data, std::unordered_map<std::string, std::string> &map);

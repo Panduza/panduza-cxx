@@ -75,9 +75,9 @@ void Core::_addAlias(const Alias &alias)
     _aliases[alias.name] = alias;
 }
 
-const Core::Alias *Core::findAlias(const std::string &name)
+Core::Alias *Core::findAlias(const std::string &name)
 {
-    const Core::Alias *ret = nullptr;
+    Core::Alias *ret = nullptr;
 
     if (_aliases.count(name) != 0)
         ret = &_aliases[name];
