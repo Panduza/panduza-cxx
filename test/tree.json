@@ -1,0 +1,15 @@
+{
+    "machine": "machine",
+    "brokers": {
+        "my_broker": {
+            "addr": "localhost",
+            "port": 1883,
+            "interfaces": [
+                {
+                    "name" : "My Psu",
+                    "driver" : "py.psu.fake"
+                }
+            ]
+        }
+    }
+}

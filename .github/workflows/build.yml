@@ -1,0 +1,80 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - test
+  pull_request:
+    branches:
+      - master
+      - develop
+      - test
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Load cached dependencies
+      uses: actions/cache@v3
+      with:
+        path: cmake/deps
+        key: fetch_content_dependencies
+
+    - name: Configure
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --parallel ${nproc}
+        cd ..
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: cmake/deps
+        key: fetch_content_dependencies
+
+    - name: Setup Mosquitto
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mosquitto mosquitto-clients
+        sudo mosquitto -d -c /etc/mosquitto/mosquitto.conf
+
+    - name: Prepare Python dependencies
+      run: |
+        echo "loguru paho-mqtt pyserial pyudev pymodbus" | xargs -n1 > requirements.txt
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - run: |
+        pip install -r requirements.txt
+
+    - name: Fetch python platform
+      uses: actions/checkout@v3
+      with:
+        repository: 'Panduza/panduza-py'
+        token: ${{ secrets.GITHUB_TOKEN }}
+        path: panduza-py
+
+    - name: Run platform
+      run: |
+        sudo mkdir /etc/panduza
+        sudo chown $(whoami):$(whoami) /etc/panduza
+        pushd panduza-py
+        pip install -e ./platform
+        nohup python3 platform/deploy/pza-py-platform-run.py ../tests/tree.json &
+        popd
+
+    - name: Test
+      run: |
+        cd build
+	make test
