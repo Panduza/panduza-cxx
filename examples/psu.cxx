@@ -4,6 +4,5 @@
 
 int main(void)
 {
-    Core::SetLogLevel(Core::LogLevel::Trace);
     return 0;
 }

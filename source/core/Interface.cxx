@@ -11,7 +11,6 @@ Interface::Interface(Client &client, const std::string &name)
     else {
         spdlog::error("Interface {:s} has not been scanned.", name);
         _state = State::Error;
-        return ;
     }
 }
 
@@ -23,6 +22,20 @@ int Interface::init(void)
         return 0;
     }
     return -1;
+}
+
+void Interface::reconnect(void)
+{
+    if (_client.isConnected()) {
+        _state = State::Init;
+        init();
+    }
+}
+
+void Interface::disconnect(void)
+{
+    unregisterAttributes();
+    _state = State::Unconnected;
 }
 
 void Interface::registerAttributes(void)
@@ -56,7 +69,7 @@ void Interface::sendMessage(const std::string &payload)
 
 Interface::~Interface()
 {
-    if (_client.isConnected() == true) {
+    if (_client.isSetup() == true) {
         _client.unregisterInterface(*this);
     }
 }

@@ -55,7 +55,7 @@ protected:
     }
 
     std::string _name;
-    T _value = 0;
+    T _value = T();
     json::value_t jsonType;
 
 private:

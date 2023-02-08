@@ -102,6 +102,10 @@ int Client::connect(void)
 
     spdlog::debug("Connected to {:s}", _addr.c_str());
 
+    for (auto &it : _interfaces) {
+        it.second->reconnect();
+    }
+
     return scan(SCAN_TIMEOUT);
 }
 
@@ -110,7 +114,7 @@ int Client::disconnect(void)
     if (_isSetup == false)
         return -1;
 
-    unregisterInterfaces();
+    unconnectInterfaces();
 
     spdlog::debug("Disconnecting from {:s}", _addr.c_str());
     try {
@@ -130,8 +134,7 @@ int Client::reconnect(void)
 
     spdlog::debug("Attempting to reconnect to {:s}", _addr.c_str());
 
-    if (isConnected())
-    {
+    if (isConnected()) {
         spdlog::debug("Already connected to {:s}", _addr.c_str());
         disconnect();
     }
@@ -149,6 +152,10 @@ int Client::reconnect(void)
     }
 
     spdlog::debug("Reconnected to {:s}", _addr.c_str());
+
+    for (auto &it : _interfaces) {
+        it.second->reconnect();
+    }
 
     return scan(SCAN_TIMEOUT);
 }
@@ -231,11 +238,6 @@ int Client::publish(const std::string &topic, const std::string &payload)
     return publish(topic, payload.c_str(), payload.length());
 }
 
-bool StringStartsWith(const std::string &s, const std::string &prefix)
-{
-    return s.rfind(prefix, 0) == 0;
-}
-
 bool Client::registerInterface(Interface &interface, const std::string &name)
 {
     bool ret = false;
@@ -259,18 +261,25 @@ bool Client::registerInterface(Interface &interface, const std::string &name)
     return ret;
 }
 
+void Client::unconnectInterfaces(void)
+{
+    for (auto &it : _interfaces) {
+        it.second->disconnect();
+    }
+}
+
 void Client::unregisterInterface(Interface &interface)
 {
-    interface.setState(Interface::State::Unconnected);
-    interface.unregisterAttributes();
+    interface.disconnect();
     _interfaces.erase(interface._baseTopic);
 }
 
 void Client::unregisterInterfaces(void)
 {
     for (auto &it : _interfaces) {
-        unregisterInterface(*it.second);
+        it.second->disconnect();
     }
+    _interfaces.clear();
 }
 
 void Client::onScan(const std::string &topic, const std::string &payload)
@@ -337,4 +346,6 @@ Client::~Client()
 {
     if (isConnected())
         disconnect();
+
+    unregisterInterfaces();
 }

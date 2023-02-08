@@ -20,17 +20,6 @@
 
 class Interface;
 
-class callback : public virtual mqtt::callback
-{
-public:
-    void connection_lost(const std::string &cause) override
-    {
-        spdlog::warn("Connection lost");
-        if (!cause.empty())
-            spdlog::warn("\tcause: {:s}", cause);
-    }
-};
-
 class Client : public virtual mqtt::callback
 {
     friend class Interface;
@@ -76,6 +65,14 @@ public:
     int scan(int timeout = SCAN_TIMEOUT);
 
 private:
+
+    void connection_lost(const std::string &cause) override
+    {
+        spdlog::warn("Connection lost");
+        if (!cause.empty())
+            spdlog::warn("\tcause: {:s}", cause);
+        unconnectInterfaces();
+    }
     
     void onScan(const std::string &topic, const std::string &payload);
     void showScanResults(void);
@@ -84,6 +81,7 @@ private:
     int unsubscribe(const std::string &topic);
     int publish(const std::string &topic, const void *payload, int len);
     int publish(const std::string &topic, const std::string &payload);
+    void unconnectInterfaces(void);
     bool registerInterface(Interface &interface, const std::string &name);
     void unregisterInterface(Interface &interface);
     void unregisterInterfaces(void);

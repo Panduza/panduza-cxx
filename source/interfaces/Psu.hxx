@@ -105,7 +105,7 @@ public:
         return _attributes;
     }
 
-    const std::vector<Attribute *> _attributes = {&volts, &amps, &settings};
+    const std::vector<Attribute *> _attributes = {&state, &volts, &amps, &settings};
 
     AState state;
     AVolts volts;

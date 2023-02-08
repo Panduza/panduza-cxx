@@ -8,7 +8,7 @@ protected:
     virtual void SetUp()
     {
         const char *props = std::getenv("PROPS_PATH");
-        
+
         if (props)
             Core::LoadAliasesFromFile(props + std::string("/alias/good.json"));
         else
@@ -26,8 +26,13 @@ protected:
 
 TEST_F(PsuTest, State)
 {
+    // dummy sleeps are because the state is set asynchronously
+    // either we need an acknolwedge from the platform after a set
+    // or we neet a get that fetches the value from the platform
     psu->state.value.set("on");
+    usleep(100000);
     EXPECT_EQ(psu->state.value.get(), "on");
     psu->state.value.set("off");
+    usleep(100000);
     EXPECT_EQ(psu->state.value.get(), "off");
 }

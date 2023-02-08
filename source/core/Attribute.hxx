@@ -48,6 +48,10 @@ public:
                         Field<bool>* f = static_cast<Field<bool>*>(field->second);
                         f->_setValue(it.value());
                     }
+                    else if (field->second->_getType() == typeid(std::string)) {
+                        Field<std::string>* f = static_cast<Field<std::string>*>(field->second);
+                        f->_setValue(it.value());
+                    }
                 }
             }
         }
@@ -63,8 +67,9 @@ public:
 
     void setCallback(const std::function<void(const json &data)> &callback)
     {
-        for (auto &field : getFields())
+        for (auto &field : getFields()) {
             field.second->setCallback(std::bind(&Attribute::dataFromField, this, std::placeholders::_1));
+        }
         _callback = callback;
     }
 

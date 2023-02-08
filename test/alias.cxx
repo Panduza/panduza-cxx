@@ -13,26 +13,10 @@ protected:
     {
         Core::LoadAliases(json);
     }
-};
 
-class AliasFail : public AliasTest,
-                  public ::testing::WithParamInterface<std::pair<std::string, int>>
-{
-protected:
-    virtual void SetUp()
+    void loadSystemFile(const std::string &file)
     {
-        AliasTest::SetUp();
-        loadAlias(GetParam().first);
-    }
-};
-
-class AliasFile : public AliasTest,
-                  public ::testing::WithParamInterface<std::string>
-{
-protected:
-    virtual void SetUp()
-    {
-        AliasTest::SetUp();
+        Core::LoadAliasesFromFile(file);
     }
 
     void loadFile(const std::string &file)
@@ -44,17 +28,10 @@ protected:
         else
             Core::LoadAliasesFromFile("alias/" + file);
     }
-};
 
-using AliasFileFail = AliasFile;
-
-class AliasFolder : public AliasTest,
-                    public ::testing::WithParamInterface<std::pair<std::string, int>>
-{
-protected:
-    virtual void SetUp()
+    void loadSystemFolder(const std::string &file)
     {
-        AliasTest::SetUp();
+        Core::LoadAliasesFromDirectory(file);
     }
 
     void loadFolder(const std::string &folder)
@@ -67,6 +44,28 @@ protected:
             Core::LoadAliasesFromDirectory("alias/" + folder);
     }
 };
+
+class AliasFile : public AliasTest,
+                  public ::testing::WithParamInterface<std::pair<std::string, int>>
+{
+    
+};
+
+class AliasFileFail : public AliasTest,
+                  public ::testing::WithParamInterface<std::string>
+{
+    
+};
+
+class AliasFolder : public AliasTest,
+                    public ::testing::WithParamInterface<std::pair<std::string, int>>
+{
+
+};
+
+using AliasTestFail = AliasTest;
+using AliasSystemFileFail = AliasFileFail;
+using AliasSystemFolderFail = AliasFolder;
 
 TEST_F(AliasTest, AliasSingle)
 {
@@ -257,12 +256,13 @@ TEST_F(AliasTest, AliasDuplicateAliasInterface)
 }
 
 
-TEST_P(AliasFail, BadFormat)
+TEST_P(AliasFile, BadFormat)
 {
+    loadAlias(GetParam().first);
     EXPECT_EQ(Core::AliasesCount(), GetParam().second);
 }
 
-INSTANTIATE_TEST_SUITE_P(TestAliasFail, AliasFail, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(TestAliasFail, AliasFile, ::testing::Values(
     std::make_pair(R"(
         "local": {
             "url": "localhost",
@@ -350,7 +350,7 @@ INSTANTIATE_TEST_SUITE_P(TestAliasFail, AliasFail, ::testing::Values(
     })", 1)
 ));
 
-TEST_F(AliasFile, Good)
+TEST_F(AliasTest, Good)
 {
     loadFile("good.json");
     EXPECT_EQ(Core::AliasesCount(), 1);
@@ -362,11 +362,21 @@ TEST_P(AliasFileFail, BadFile)
     EXPECT_EQ(Core::AliasesCount(), 0);
 }
 
+TEST_P(AliasSystemFileFail, SystemFileFail)
+{
+    loadSystemFile(GetParam());
+    EXPECT_EQ(Core::AliasesCount(), 0);
+}
+
 INSTANTIATE_TEST_SUITE_P(TestAliasFileFail, AliasFileFail, ::testing::Values(
     "empty.json",
     "doesnotexist.json",
-    "permissiondenied.json",
-    "fifo.json",
+    "folder_empty"
+));
+
+INSTANTIATE_TEST_SUITE_P(TestAliasSystemFileFail, AliasSystemFileFail, ::testing::Values(
+    "/dev/null",
+    "/dev/random",
     "folder_empty"
 ));
 
@@ -376,13 +386,17 @@ TEST_P(AliasFolder, Folder)
     EXPECT_EQ(Core::AliasesCount(), GetParam().second);
 }
 
+TEST_F(AliasTest, SystemFolderPermission)
+{
+    loadSystemFolder("/root");
+    EXPECT_EQ(Core::AliasesCount(), 0);
+}
+
 INSTANTIATE_TEST_SUITE_P(TestAliasFolder, AliasFolder, ::testing::Values(
     std::make_pair("folder_single", 1),
     std::make_pair("folder_multiple", 2),
     std::make_pair("folder_multiple_duplicate", 1),
     std::make_pair("folder_partial_good", 1),
-    std::make_pair("fifo.json", 0),
     std::make_pair("good.json", 0),
-    std::make_pair("folder_empty", 0),
-    std::make_pair("folder_permission_denied", 0)
+    std::make_pair("folder_empty", 0)
 ));

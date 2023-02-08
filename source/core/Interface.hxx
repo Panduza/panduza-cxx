@@ -26,7 +26,7 @@ public:
         return (_state == State::Run);
     }
 
-    int init(void);
+    virtual int init(void);
 
 protected:
     explicit Interface(Client &client, const std::string &name);
@@ -55,6 +55,8 @@ private:
     void registerAttributes(void);
     void unregisterAttributes(void);
     void sendMessage(const std::string &payload);
+    void reconnect(void);
+    void disconnect(void);
 
     State _state;
     Topic _topic;
