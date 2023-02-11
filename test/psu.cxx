@@ -9,6 +9,8 @@ protected:
     {
         const char *props = std::getenv("PROPS_PATH");
 
+        Core::RemoveAliases();
+
         if (props)
             Core::LoadAliasesFromFile(props + std::string("/alias/good.json"));
         else
@@ -26,13 +28,30 @@ protected:
 
 TEST_F(PsuTest, State)
 {
-    // dummy sleeps are because the state is set asynchronously
-    // either we need an acknolwedge from the platform after a set
-    // or we neet a get that fetches the value from the platform
     psu->state.value.set("on");
-    usleep(100000);
     EXPECT_EQ(psu->state.value.get(), "on");
     psu->state.value.set("off");
-    usleep(100000);
     EXPECT_EQ(psu->state.value.get(), "off");
+}
+
+TEST_F(PsuTest, VoltsValue)
+{
+    psu->volts.goal.set(4.2);
+    EXPECT_EQ(psu->volts.real.get(), 4.2);
+    EXPECT_EQ(psu->volts.goal.get(), 4.2);
+
+    psu->volts.goal.set(8);
+    EXPECT_EQ(psu->volts.real.get(), 8);
+    EXPECT_EQ(psu->volts.goal.get(), 8);
+}
+
+TEST_F(PsuTest, AmpsValue)
+{
+    psu->amps.goal.set(4.2);
+    EXPECT_EQ(psu->amps.real.get(), 4.2);
+    EXPECT_EQ(psu->amps.goal.get(), 4.2);
+
+    psu->amps.goal.set(8);
+    EXPECT_EQ(psu->amps.real.get(), 8);
+    EXPECT_EQ(psu->amps.goal.get(), 8);
 }

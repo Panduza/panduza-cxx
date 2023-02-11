@@ -62,5 +62,5 @@ private:
     Topic _topic;
     Client &_client;
     std::string _baseTopic;
-    std::vector<std::string> _atts;
+    std::vector<std::string> _attsTopic;
 };

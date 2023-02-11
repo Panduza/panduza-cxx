@@ -3,10 +3,10 @@
 
 Client::Client(const std::string &addr, int port, const std::string &id)
 {
-    if (_id == "")
-        _id = _generateRandomID();
-
-    init(formatAddress(addr, port), _id);
+    if (id == "")
+        init(formatAddress(addr, port), _generateRandomID());
+    else
+        init(formatAddress(addr, port), id);
 }
 
 Client::Client(const std::string &alias)
@@ -165,6 +165,8 @@ void Client::message_arrived(mqtt::const_message_ptr msg)
     std::string topic = msg->get_topic();
     std::string payload = msg->to_string();
 
+    spdlog::trace("Received message on topic \"{:s}\" : \"{:s}\"", topic, payload);
+
     if (_listeners.count(topic) > 0) {
         _listeners[topic](topic, payload); // execute callback at index
     } else {
@@ -192,7 +194,7 @@ int Client::subscribe(const std::string &topic, const std::function<void(const s
         return -1;
     }
 
-    spdlog::trace("Registering listener for \"{:s}\"", topic);
+    spdlog::trace("Subscribed to \"{:s}\"", topic);
     std::replace(s.begin(), s.end(), '+', '*');
     std::replace(s.begin(), s.end(), '#', '*');
     _listeners[s] = f;
@@ -205,6 +207,7 @@ int Client::unsubscribe(const std::string &topic)
     if (_isSetup == false)
         return -1;
 
+
     try {
         _pahoClient->unsubscribe(topic)->wait_for(std::chrono::seconds(CONN_TIMEOUT));
     }
@@ -213,7 +216,7 @@ int Client::unsubscribe(const std::string &topic)
         return -1;
     }
 
-    spdlog::trace("Unregistering listener for \"{:s}\"", topic);
+    spdlog::trace("Unsubscribed from \"{:s}\"", topic);
     _listeners.erase(topic);
     return 0;
 }
@@ -286,7 +289,8 @@ void Client::onScan(const std::string &topic, const std::string &payload)
 {
     json data;
     std::string tmp;
-    std::unique_lock<std::mutex> lock(_mtx);
+
+    std::lock_guard<std::mutex> lock(_mtx);
 
     if (Utils::Json::ParseJson(payload, data) == -1)
         return ;
@@ -297,11 +301,13 @@ void Client::onScan(const std::string &topic, const std::string &payload)
         _scanResult.emplace(topic.substr(0, topic.find("/atts/info")));
         _scanCountInterfaces++;
     }
-    _cv.notify_one();
+    _cv.notify_all();
 }
 
 void Client::showScanResults(void)
 {
+    if (Core::LogLevel() > Core::LogLevel::Debug)
+        return ;
     spdlog::debug("--- Scan results ---");
     spdlog::debug("Interface count: {:d}", _scanCountInterfaces);
     if (_scanCountInterfaces == 0)
@@ -318,8 +324,6 @@ int Client::scan(int timeout)
     int ret = 0;
     std::unique_lock<std::mutex> l(_mtx);
 
-    using namespace std::chrono_literals;
-
     _scanCountInterfaces = 0;
     _scanCountPlatform = 0;
     _scanResult.clear();
@@ -330,22 +334,17 @@ int Client::scan(int timeout)
     if (_cv.wait_for(l, std::chrono::seconds(timeout), _scanComplete) == false) {
         if (_scanCountPlatform == 0)
             spdlog::error("No Panduza platform seems to be running on the server.");
-        else {
+        else
             spdlog::warn("Scan didn't finish after {:d} seconds. Found {:d} interfaces but expected {:d}.", timeout, _scanCountInterfaces, _scanCountPlatform);
-        }
         ret = -1;
     }
-    else {
+    else
         spdlog::debug("Scan successful! Found {:d} interfaces.", _scanCountInterfaces);
-    }
     showScanResults();
     return ret;
 }
 
 Client::~Client()
 {
-    if (isConnected())
-        disconnect();
-
-    unregisterInterfaces();
+    destroy();
 }

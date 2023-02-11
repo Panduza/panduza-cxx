@@ -6,7 +6,7 @@ class AliasTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        Core::removeAliases();
+        Core::RemoveAliases();
     }
 
     void loadAlias(const std::string &json)
@@ -130,7 +130,7 @@ TEST_F(AliasTest, AliasDelete)
     })");
     EXPECT_EQ(Core::AliasesCount(), 2);
     ASSERT_TRUE(Core::findAlias("local"));
-    Core::removeAlias("local");
+    Core::RemoveAlias("local");
     EXPECT_EQ(Core::AliasesCount(), 1);
     EXPECT_FALSE(Core::findAlias("local"));
 }
@@ -150,7 +150,7 @@ TEST_F(AliasTest, AliasDeleteAll)
     EXPECT_EQ(Core::AliasesCount(), 2);
     ASSERT_TRUE(Core::findAlias("local"));
     ASSERT_TRUE(Core::findAlias("local2"));
-    Core::removeAliases();
+    Core::RemoveAliases();
     EXPECT_EQ(Core::AliasesCount(), 0);
     EXPECT_FALSE(Core::findAlias("local"));
     EXPECT_FALSE(Core::findAlias("local2"));

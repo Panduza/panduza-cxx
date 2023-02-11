@@ -13,7 +13,7 @@ protected:
 
         if (!props)
             props = "";
-        Core::removeAliases();
+        Core::RemoveAliases();
         Core::LoadAliasesFromFile(props + std::string("alias/good.json"));
         client = std::make_unique<Client>("good");
         ASSERT_EQ(client->connect(), 0);

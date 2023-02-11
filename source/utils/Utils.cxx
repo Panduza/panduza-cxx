@@ -85,6 +85,29 @@ namespace Utils
             value = data[key];
             return 0;
         }
+
+        std::string GetTypeName(const json::value_t &type) {
+            switch (type) {
+                case json::value_t::null:
+                    return "null";
+                case json::value_t::boolean:
+                    return "boolean";
+                case json::value_t::number_integer:
+                    return "integer";
+                case json::value_t::number_unsigned:
+                    return "unsigned";
+                case json::value_t::number_float:
+                    return "float";
+                case json::value_t::string:
+                    return "string";
+                case json::value_t::array:
+                    return "array";
+                case json::value_t::object:
+                    return "object";
+                default:
+                    return "unknown";
+            }
+        }
     }
     namespace String
     {

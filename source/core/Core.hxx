@@ -24,9 +24,10 @@ public:
         Trace = spdlog::level::trace,
         Debug = spdlog::level::debug,
         Info = spdlog::level::info,
+        Warn = spdlog::level::warn,
         Error = spdlog::level::err,
         Critical = spdlog::level::critical,
-        None = spdlog::level::off
+        Off = spdlog::level::off
     };
 
     Core() = default;
@@ -42,6 +43,10 @@ public:
 
     static void PrintVersion(void);
     static void SetLogLevel(const enum LogLevel &);
+    static enum LogLevel LogLevel(void)
+    {
+        return (enum LogLevel)spdlog::get_level();
+    }
     static void LoadAliases(const std::string &s);
     static void LoadAliasesFromFile(const std::string &fileName);
     static void LoadAliasesFromDirectory(const std::string &dirName);
@@ -58,13 +63,13 @@ public:
         spdlog::debug("---------------------------");
     }
     static Alias *findAlias(const std::string &name);
-    static void removeAlias(const std::string &name);
-    static void removeAliases(void);
+    static void RemoveAlias(const std::string &name);
+    static void RemoveAliases(void);
 
 private:
     static int _LoadInterfaces(const json &data, std::unordered_map<std::string, std::string> &map);
     static void _LoadAliasesFromJson(const std::string &payload);
-    static void _addAlias(const Alias &alias);
+    static void _AddAlias(const Alias &alias);
 
     std::unordered_map<std::string, Alias> _aliases;
 };

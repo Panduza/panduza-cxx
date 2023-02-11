@@ -12,7 +12,7 @@ public:
 
     }
     
-    const std::unordered_map<std::string, FieldBase*> &getFields() const override
+    const std::unordered_map<std::string, FieldBase *> &getFields() const override
     {
         return _fields;
     }

@@ -15,6 +15,7 @@ namespace Utils
         int ToInteger(const json &data, const std::string &key, int &value);
         int ToBool(const json &data, const std::string &key, bool &value);
         int ToObject(const json &data, const std::string &key, json &value);
+        std::string GetTypeName(const json::value_t &type);
     };
     namespace String
     {

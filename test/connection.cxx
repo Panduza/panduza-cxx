@@ -26,7 +26,7 @@ protected:
 
     void loadAlias(const std::string &json)
     {
-        Core::removeAliases();
+        Core::RemoveAliases();
         Core::LoadAliases(json);
     }
 

@@ -34,6 +34,8 @@ void Interface::reconnect(void)
 
 void Interface::disconnect(void)
 {
+    if (_state == State::Unconnected)
+        return ;
     unregisterAttributes();
     _state = State::Unconnected;
 }
@@ -44,7 +46,7 @@ void Interface::registerAttributes(void)
 
     for (auto const &atts : getAttributes()) {
         topic = _baseTopic + "/atts/" + atts->name();
-        _atts.push_back(topic);
+        _attsTopic.push_back(topic);
         _client.subscribe(topic, std::bind(&Attribute::onMessage, atts, std::placeholders::_1, std::placeholders::_2));
         atts->setCallback(std::bind(&Interface::dataFromAttribute, this, std::placeholders::_1));
     }
@@ -52,7 +54,7 @@ void Interface::registerAttributes(void)
 
 void Interface::unregisterAttributes(void)
 {
-    for (auto const &topic : _atts) {
+    for (auto const &topic : _attsTopic) {
         _client.unsubscribe(topic);
     }
 }

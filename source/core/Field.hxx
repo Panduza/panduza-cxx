@@ -11,7 +11,7 @@ public:
     virtual const std::string &_getName() const = 0;
     virtual const std::type_info &_getType() const = 0;
     virtual const json::value_t &_getJsonType() const = 0;
-    virtual void setCallback(const std::function<void(const json &data)> &callback) = 0;
+    virtual void setCallback(const std::function<void(const json &data, bool ensure)> &callback) = 0;
 };
 
 template <typename T>
@@ -59,7 +59,7 @@ protected:
     json::value_t jsonType;
 
 private:
-    virtual void setCallback(const std::function<void(const json &data)> &callback) override
+    virtual void setCallback(const std::function<void(const json &data, bool ensure)> &callback) override
     {
         (void)callback;
     }
@@ -105,22 +105,33 @@ public:
 
     };
 
-    void set(const T &value)
+    void _set(const T &value, bool ensure)
     {
         json data;
 
         data[this->_name] = value;
-        _callback(data);
+        _callback(data, ensure);
+    }
+
+    void aset(const T &value)
+    {
+        _set(value, false);
+    }
+
+    void set(const T &value)
+    {
+        _set(value, true);
     }
 
 private:
-    void setCallback(const std::function<void(const json &data)> &callback) override
+    void setCallback(const std::function<void(const json &data, bool ensure)> &callback) override
     {
         _callback = callback;
     }
 
-    std::function<void(const json &data)> _callback = [](const json &data)
+    std::function<void(const json &data, bool ensure)> _callback = [](const json &data, bool ensure)
     {
         (void)data;
+        (void)ensure;
     };
 };

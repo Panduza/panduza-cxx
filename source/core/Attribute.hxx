@@ -4,6 +4,9 @@
 #include <utils/Utils.hxx>
 #include <core/Field.hxx>
 
+#define SET_TIMEOUT 1 // in seconds
+#define SET_TIMEOUT_RETRIES 3
+
 class Attribute
 {
 public:
@@ -32,10 +35,13 @@ public:
 
     virtual void onData(const json& json) 
     {
+        std::lock_guard<std::mutex> lock(_mtx);
+
         for (auto it = json.begin(); it != json.end(); ++it) {
             auto field = getFields().find(it.key());
             if (field != getFields().end()) {
                 if (isTypeCompatible(it.value().type(), field->second->_getJsonType()) == true) {
+                    spdlog::trace("Setting attribute {:s} field {:s} to value {:s}", _name, it.key(), it.value().dump());
                     if (field->second->_getType() == typeid(double)) {
                         Field<double>* f = static_cast<Field<double>*>(field->second);
                         f->_setValue(it.value());
@@ -53,22 +59,39 @@ public:
                         f->_setValue(it.value());
                     }
                 }
+                else {
+                    spdlog::warn("Type mismatch for attribute {:s}, field {:s}.. Expected {:s}, got {:s}", _name, it.key(), Utils::Json::GetTypeName(field->second->_getJsonType()), it.value().type_name());
+                }
             }
         }
+        _waitingForResponse = false;
+        _cv.notify_all();
     }
 
-    void dataFromField(const json &data)
+    void dataFromField(const json &data, bool ensure)
     {
         json json;
 
         json[_name] = data;
+        if (ensure)
+            _waitingForResponse = true;
         _callback(json);
+        if (ensure) {
+            std::unique_lock<std::mutex> lock(_mtx);
+
+            for (int i = 0; i < SET_TIMEOUT_RETRIES; i++) {
+                if (_cv.wait_for(lock, std::chrono::seconds(SET_TIMEOUT), [&](){return !_waitingForResponse;}) == true)
+                    break;
+                else
+                    spdlog::warn("Timeout while waiting for response from attribute {:s}, retrying...", _name);
+            }
+        }
     }
 
     void setCallback(const std::function<void(const json &data)> &callback)
     {
         for (auto &field : getFields()) {
-            field.second->setCallback(std::bind(&Attribute::dataFromField, this, std::placeholders::_1));
+            field.second->setCallback(std::bind(&Attribute::dataFromField, this, std::placeholders::_1, std::placeholders::_2));
         }
         _callback = callback;
     }
@@ -90,4 +113,7 @@ protected:
     }
 
     std::string _name;
+    bool _waitingForResponse = false;
+    std::condition_variable _cv;
+    std::mutex _mtx;
 };

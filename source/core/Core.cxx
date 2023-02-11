@@ -86,7 +86,7 @@ void Core::_LoadAliasesFromJson(const std::string &payload)
             spdlog::error("Could not parse alias {:s}", item.key());
             continue;
         }
-        Core::Get()._addAlias(alias);
+        Core::Get()._AddAlias(alias);
     }
 }
 
@@ -120,7 +120,7 @@ void Core::LoadAliasesFromDirectory(const std::string &dirName)
     closedir(dir);
 }
 
-void Core::_addAlias(const Alias &alias)
+void Core::_AddAlias(const Alias &alias)
 {
     if (Core::Get()._aliases.count(alias.id) != 0)
         spdlog::warn("Alias {:s} already registered will be overwritten", alias.id);
@@ -139,7 +139,7 @@ Alias *Core::findAlias(const std::string &name)
     return ret;
 }
 
-void Core::removeAlias(const std::string &name)
+void Core::RemoveAlias(const std::string &name)
 {
     if (Core::Get()._aliases.count(name) != 0) {
         Core::Get()._aliases.erase(name);
@@ -148,7 +148,7 @@ void Core::removeAlias(const std::string &name)
         spdlog::error("Alias named {:s} does not exist", name);
 }
 
-void Core::removeAliases(void)
+void Core::RemoveAliases(void)
 {
 // use removeAlias instead in a safe for loop
     Core::Get()._aliases.clear();
