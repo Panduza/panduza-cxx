@@ -45,7 +45,7 @@ jobs:
     - name: Setup Mosquitto
       run: |
         sudo apt-get update
-        sudo apt-get install -y mosquitto mosquitto-clients
+        sudo apt-get install -y mosquitto mosquitto-clients libpaho-mqtt-dev
         sudo mosquitto -d -c /etc/mosquitto/mosquitto.conf
 
     - name: Prepare Python dependencies
