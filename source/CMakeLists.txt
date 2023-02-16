@@ -1,31 +1,38 @@
-add_library(${LIBRARY_NAME} SHARED)
+add_library(${LIBRARY_NAME})
 
-target_sources(${LIBRARY_NAME} PRIVATE
-    core/Core.cxx
-    core/Alias.cxx
-    core/Client.cxx
-    core/Interface.cxx
-    core/Topic.cxx
-    core/Attribute.cxx
-    core/Field.cxx
+file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/source/*.hxx)
 
-    interfaces/Psu.cxx
+target_sources(${LIBRARY_NAME}
+    PRIVATE
+    
+    pza/core/Core.cxx
+    pza/core/Alias.cxx
+    pza/core/Client.cxx
+    pza/core/Interface.cxx
+    pza/core/Topic.cxx
+    pza/core/Attribute.cxx
+    pza/core/Field.cxx
+    pza/interfaces/Psu.cxx
+    pza/utils/Utils.cxx
 
-    utils/Utils.cxx
-)
+    PUBLIC
 
-set(spdlog_INCLUDE_DIRS
-    ${spdlog_SOURCE_DIR}/include
-)
-set(spdlog_LIB_DIRS
-    ${spdlog_BINARY_DIR}
+    FILE_SET HEADERS
+    FILES  ${HEADERS}
 )
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
-    ${spdlog_INCLUDE_DIRS}
+    ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(${LIBRARY_NAME} spdlog)
-target_link_libraries(${LIBRARY_NAME} nlohmann_json)
-target_link_libraries(${LIBRARY_NAME} paho-mqttpp3)
+target_link_libraries(${LIBRARY_NAME}
+    PUBLIC
+    spdlog::spdlog
+    nlohmann_json::nlohmann_json
+    paho-mqtt-cpp::paho-mqtt-cpp
+)
+
+install(TARGETS ${LIBRARY_NAME}
+    FILE_SET HEADERS
+)

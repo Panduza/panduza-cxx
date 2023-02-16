@@ -1,12 +1,14 @@
-#include <core/Alias.hxx>
+#include <pza/core/Alias.hxx>
 
-void Alias::show(void)
+using namespace pza;
+
+void Alias::show(void) const
 {
     std::cout << "Alias: " << id << std::endl;
     std::cout << "  url: " << url << std::endl;
     std::cout << "  port: " << port << std::endl;
     std::cout << "  interfaces: " << std::endl;
-    for (auto &it : interfaces)
+    for (auto const &it : interfaces)
         std::cout << "    " << it.first << " -> " << it.second << std::endl;
 }
 

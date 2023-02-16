@@ -15,9 +15,7 @@ set_target_properties(unitest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/test"
 )
 
-configure_file(tree.json ${CMAKE_CURRENT_BINARY_DIR}/../share/tree.json)
-
-target_link_libraries(unitest gtest ${LIBRARY_NAME})
+target_link_libraries(unitest ${LIBRARY_NAME} GTest::GTest)
 
 gtest_discover_tests(unitest
     DISCOVERY_TIMEOUT 60

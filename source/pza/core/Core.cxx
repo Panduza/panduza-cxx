@@ -1,9 +1,11 @@
-#include <core/Core.hxx>
-#include <core/Interface.hxx>
+#include <pza/core/Core.hxx>
+#include <pza/core/Interface.hxx>
+
+using namespace pza;
 
 void Core::PrintVersion(void)
 {
-    std::cout << API_VERSION << std::endl;
+    std::cout << LIBRARY_VERSION << std::endl;
 }
 
 void Core::SetLogLevel(const enum LogLevel &level)
@@ -18,7 +20,7 @@ int Core::_LoadInterfaces(const json &data, std::unordered_map<std::string, std:
     if (data.contains("interfaces") == false)
         return 0;
 
-    if (Utils::Json::ToObject(data, "interfaces", tmp) == -1)
+    if (utils::json::ToObject(data, "interfaces", tmp) == -1)
         return -1;
 
     for (auto const &item : tmp.items()) {
@@ -70,7 +72,7 @@ void Core::_LoadAliasesFromJson(const std::string &payload)
 {
     json data;
     
-    if (Utils::Json::ParseJson(payload, data) == -1)
+    if (utils::json::ParseJson(payload, data) == -1)
         return ;
 
     for (auto const &item : data.items()) {
@@ -79,8 +81,8 @@ void Core::_LoadAliasesFromJson(const std::string &payload)
         const json &tmp = data[key];
         alias.id = key;
         
-        if (Utils::Json::ToString(tmp, "url", alias.url) == -1
-            || Utils::Json::ToInteger(tmp, "port", alias.port) == -1
+        if (utils::json::ToString(tmp, "url", alias.url) == -1
+            || utils::json::ToInteger(tmp, "port", alias.port) == -1
             || _LoadInterfaces(tmp, alias.interfaces) == -1)
         {
             spdlog::error("Could not parse alias {:s}", item.key());

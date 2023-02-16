@@ -1,5 +1,7 @@
-#include <core/Client.hxx>
-#include <core/Interface.hxx>
+#include <pza/core/Client.hxx>
+#include <pza/core/Interface.hxx>
+
+using namespace pza;
 
 Client::Client(const std::string &addr, int port, const std::string &id)
 {
@@ -16,14 +18,12 @@ Client::Client(const std::string &alias)
 
 void Client::init(const std::string &alias)
 {
-    std::string id;
-
     _alias = Core::Get().findAlias(alias);
     if (_alias) {
-        id = _alias->id;
-        if (id == "")
-            id = _generateRandomID();
-        init(formatAddress(_alias->url, _alias->port), id);
+        std::string id_tmp = _alias->id;
+        if (id_tmp == "")
+            id_tmp = _generateRandomID();
+        init(formatAddress(_alias->url, _alias->port), id_tmp);
     }
 }
 
@@ -70,12 +70,12 @@ std::string Client::_generateRandomID(void)
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 25);
-    std::string id;
+    std::string ret;
 
     for (int i = 0; i < 16; i++) {
-        id += 'a' + dis(gen);
+        ret += 'a' + dis(gen);
     }
-    return id;
+    return ret;
 }
 
 int Client::connect(void)
@@ -227,7 +227,7 @@ int Client::publish(const std::string &topic, const void *payload, int len)
         return -1;
 
     try {
-        _pahoClient->publish(topic, (const char *)payload, len, 0, false)->wait_for(std::chrono::seconds(CONN_TIMEOUT));
+        _pahoClient->publish(topic, payload, len, 0, false)->wait_for(std::chrono::seconds(CONN_TIMEOUT));
     }
     catch (const mqtt::exception& exc) {
         spdlog::error("Could not publish to {:s} : {:s}", _addr, exc.what());
@@ -246,7 +246,7 @@ bool Client::registerInterface(Interface &interface, const std::string &name)
     bool ret = false;
     std::string &baseTopic = (std::string &)name;
 
-    if (Utils::String::StartsWith(name, "pza/") == false) {
+    if (utils::string::StartsWith(name, "pza/") == false) {
         // is an alias
         if (_alias && _alias->interfaces.count(name) > 0) {
             baseTopic = _alias->interfaces[name];
@@ -292,12 +292,12 @@ void Client::onScan(const std::string &topic, const std::string &payload)
 
     std::lock_guard<std::mutex> lock(_mtx);
 
-    if (Utils::Json::ParseJson(payload, data) == -1)
+    if (utils::json::ParseJson(payload, data) == -1)
         return ;
 
-    if (Utils::Json::KeyExists(data, "info") && Utils::Json::ToString(data["info"], "type", tmp) == 0) {
+    if (utils::json::KeyExists(data, "info") && utils::json::ToString(data["info"], "type", tmp) == 0) {
         if (tmp == "platform")
-            Utils::Json::ToInteger(data["info"], "interfaces", _scanCountPlatform);
+            utils::json::ToInteger(data["info"], "interfaces", _scanCountPlatform);
         _scanResult.emplace(topic.substr(0, topic.find("/atts/info")));
         _scanCountInterfaces++;
     }

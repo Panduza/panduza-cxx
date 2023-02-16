@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
-#include <core/Client.hxx>
-#include <interfaces/Psu.hxx>
+#include <pza/core/Client.hxx>
+#include <pza/interfaces/Psu.hxx>
+
+using namespace pza;
 
 class PsuTest : public ::testing::Test
 {

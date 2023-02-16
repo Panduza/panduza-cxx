@@ -1,3 +1,5 @@
 build
-cmake/deps
+examples/build
+examples/CMakeUserPresets.json
+CMakeUserPresets.json
 .vscode

@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
-#include <core/Client.hxx>
+#include <pza/core/Client.hxx>
+
+using namespace pza;
 
 class BaseClient : public ::testing::Test,
                    public ::testing::WithParamInterface<std::pair<std::string, int>>

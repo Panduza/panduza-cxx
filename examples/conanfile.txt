@@ -1,0 +1,10 @@
+[requires]
+libpza-cxx/0.1.0
+
+[options]
+libpza-cxx:shared=True
+
+[generators]
+CMakeDeps
+CMakeToolchain
+virtualrunenv

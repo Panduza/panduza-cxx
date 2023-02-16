@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
-#include <core/Client.hxx>
+#include <pza/core/Client.hxx>
+
+using namespace pza;
 
 class AliasTest : public ::testing::Test
 {

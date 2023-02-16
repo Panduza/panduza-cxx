@@ -1,5 +1,7 @@
-#include <core/Interface.hxx>
-#include <core/Client.hxx>
+#include <pza/core/Interface.hxx>
+#include <pza/core/Client.hxx>
+
+using namespace pza;
 
 Interface::Interface(Client &client, const std::string &name)
     : _client(client)
@@ -42,10 +44,8 @@ void Interface::disconnect(void)
 
 void Interface::registerAttributes(void)
 {
-    std::string topic;
-
     for (auto const &atts : getAttributes()) {
-        topic = _baseTopic + "/atts/" + atts->name();
+        std::string topic = _baseTopic + "/atts/" + atts->name();
         _attsTopic.push_back(topic);
         _client.subscribe(topic, std::bind(&Attribute::onMessage, atts, std::placeholders::_1, std::placeholders::_2));
         atts->setCallback(std::bind(&Interface::dataFromAttribute, this, std::placeholders::_1));

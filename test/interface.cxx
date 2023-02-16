@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
-#include <core/Client.hxx>
-#include <interfaces/Psu.hxx>
+#include <pza/core/Client.hxx>
+#include <pza/interfaces/Psu.hxx>
+
+using namespace pza;
 
 // Using PSU as an example, but this applies to all interfaces
 
@@ -25,11 +27,6 @@ protected:
     std::unique_ptr<Client> client;
     std::unique_ptr<Psu> psu;
 };
-
-TEST_F(InterfaceTest, Init)
-{
-
-}
 
 TEST_F(InterfaceTest, Disconnect)
 {

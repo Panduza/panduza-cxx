@@ -1,4 +1,6 @@
-#include <core/Topic.hxx>
+#include <pza/core/Topic.hxx>
+
+using namespace pza;
 
 void Topic::setup(const std::string &name)
 {
