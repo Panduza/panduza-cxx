@@ -49,5 +49,6 @@ class PzaCxx(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.name = "Panduza C++ Library"
-        self.cpp_info.libs = ["pza-cxx"]
+	    self.cpp_info.name = "Panduza C++ Library"
+	    suffix = "-debug" if self.settings.build_type == "Debug" else ""
+	    self.cpp_info.libs = [f"pza-cxx{suffix}"]
