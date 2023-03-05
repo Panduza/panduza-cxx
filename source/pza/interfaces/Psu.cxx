@@ -2,8 +2,8 @@
 
 using namespace pza;
 
-Psu::Psu(Client &client, const std::string &name)
-    : Interface(client, name)
+Psu::Psu(const std::string &name)
+    : Interface(name)
 {
-    
+    _type = Interface::Type::Psu;
 }

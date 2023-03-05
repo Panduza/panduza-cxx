@@ -91,7 +91,7 @@ TEST_P(BaseConnSuccess, Destroy)
 TEST_P(BaseConnSuccess, Reset)
 {
     std::string url = client->formatAddress(GetParam().first, GetParam().second);
-    client->reset(url, "");
+    client->reset(url);
     EXPECT_TRUE(client->isSetup());
 }
 
@@ -178,7 +178,7 @@ TEST_F(BaseClientAlias, ConnectToBadAndResetToAlias)
         }
     })");
 
-    client->reset("local");
+    client->resetAlias("local");
     EXPECT_TRUE(client->isSetup());
     EXPECT_EQ(client->connect(), 0);
 }

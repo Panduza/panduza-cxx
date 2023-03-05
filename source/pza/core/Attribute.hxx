@@ -12,7 +12,7 @@ namespace pza
 {
     class Attribute
     {
-    public:
+    private:
         friend class Interface;
 
         void onMessage(const std::string &topic, const std::string &payload);
@@ -85,7 +85,12 @@ namespace pza
             json[_name] = data;
             if (ensure)
                 _waitingForResponse = true;
-            _callback(json);
+            if (_callback)
+                _callback(json);
+            else {
+                spdlog::error("No callback set for attribute.. Make sure the interface is bound to a client.");
+                return ;
+            }
             if (ensure)
             {
                 std::unique_lock<std::mutex> lock(_mtx);
@@ -125,7 +130,19 @@ namespace pza
         {
         }
 
+    private:
+        void setTopic(const std::string &topic)
+        {
+            _topic = topic;
+        }
+
+        std::string topic() const
+        {
+            return _topic;
+        }
+
         std::string _name;
+        std::string _topic;
         bool _waitingForResponse = false;
         std::condition_variable _cv;
         std::mutex _mtx;

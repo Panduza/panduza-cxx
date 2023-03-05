@@ -16,7 +16,7 @@ then
 fi
 
 conan install .. --build=missing -s build_type=$BUILD_TYPE
-cmake -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=./$BUILD_TYPE/generators/conan_toolchain.cmake ..
-cmake --build . --parallel ${nproc}
-cmake --install .
+conan build ..
+conan export-pkg .. -f
+conan upload "libpza-cxx" -r conan-local -c
 popd

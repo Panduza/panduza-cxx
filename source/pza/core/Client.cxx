@@ -5,18 +5,15 @@ using namespace pza;
 
 Client::Client(const std::string &addr, int port, const std::string &id)
 {
-    if (id == "")
-        init(formatAddress(addr, port), _generateRandomID());
-    else
-        init(formatAddress(addr, port), id);
+    init(addr, port, id);
 }
 
 Client::Client(const std::string &alias)
 {
-    init(alias);
+    initAlias(alias);
 }
 
-void Client::init(const std::string &alias)
+void Client::initAlias(const std::string &alias)
 {
     _alias = Core::Get().findAlias(alias);
     if (_alias) {
@@ -27,25 +24,36 @@ void Client::init(const std::string &alias)
     }
 }
 
-void Client::init(const std::string &addr, const std::string &id)
+void Client::init(const std::string &addr, int port, const std::string &id)
 {
-    _addr = addr;
+    init(formatAddress(addr, port), (id == "") ? _generateRandomID() : id);
+}
+
+void Client::init(const std::string &url, const std::string &id)
+{
+    _url = url;
     _id = id;
-    _pahoClient = std::make_unique<mqtt::async_client>(addr, id);
+    _pahoClient = std::make_unique<mqtt::async_client>(_url, id);
     _pahoClient->set_callback(_cb);
     _isSetup = true;
 }
 
-void Client::reset(const std::string &alias)
+void Client::resetAlias(const std::string &alias)
 {
     destroy();
-    init(alias);
+    initAlias(alias);
 }
 
-void Client::reset(const std::string &addr, const std::string &id)
+void Client::reset(const std::string &addr, int port, const std::string &id)
 {
     destroy();
-    init(addr, id);
+    init(addr, port, id);
+}
+
+void Client::reset(const std::string &url, const std::string &id)
+{
+    destroy();
+    init(url, id);
 }
 
 void Client::destroy(void)
@@ -56,6 +64,7 @@ void Client::destroy(void)
     else {
         unregisterInterfaces();
     }
+    _pahoClient.reset();
     _listeners.clear();
     _isSetup = false;
 }
@@ -78,6 +87,12 @@ std::string Client::_generateRandomID(void)
     return ret;
 }
 
+void Client::abortScan(void)
+{
+    _scanAbort = true;
+    _cv.notify_all();
+}
+
 int Client::connect(void)
 {
     mqtt::connect_options opts;
@@ -96,15 +111,11 @@ int Client::connect(void)
         }
     }
     catch (const mqtt::exception& exc) {
-        spdlog::error("Could not connect to {:s} : {:s}", _addr, exc.what());
+        spdlog::error("Could not connect to {:s} : {:s}", _url, exc.what());
         return -1;
     }
 
-    spdlog::debug("Connected to {:s}", _addr.c_str());
-
-    for (auto &it : _interfaces) {
-        it.second->reconnect();
-    }
+    spdlog::debug("Connected to {:s}", _url.c_str());
 
     return scan(SCAN_TIMEOUT);
 }
@@ -114,14 +125,16 @@ int Client::disconnect(void)
     if (_isSetup == false)
         return -1;
 
+    abortScan();
+
     unconnectInterfaces();
 
-    spdlog::debug("Disconnecting from {:s}", _addr.c_str());
+    spdlog::debug("Disconnecting from {:s}", _url.c_str());
     try {
         _pahoClient->disconnect()->wait_for(std::chrono::seconds(CONN_TIMEOUT));
     }
     catch (const mqtt::exception& exc) {
-        spdlog::error("Could not disconnect from {:s} : {:s}", _addr, exc.what());
+        spdlog::error("Could not disconnect from {:s} : {:s}", _url, exc.what());
         return -1;
     }
     return 0;
@@ -132,10 +145,10 @@ int Client::reconnect(void)
     if (_isSetup == false)
         return -1;
 
-    spdlog::debug("Attempting to reconnect to {:s}", _addr.c_str());
+    spdlog::debug("Attempting to reconnect to {:s}", _url.c_str());
 
     if (isConnected()) {
-        spdlog::debug("Already connected to {:s}", _addr.c_str());
+        spdlog::debug("Already connected to {:s}", _url.c_str());
         disconnect();
     }
 
@@ -147,15 +160,11 @@ int Client::reconnect(void)
         }
     }
     catch (const mqtt::exception& exc) {
-        spdlog::error("Could not reconnect to {:s} : {:s}", _addr, exc.what());
+        spdlog::error("Could not reconnect to {:s} : {:s}", _url, exc.what());
         return -1;
     }
 
-    spdlog::debug("Reconnected to {:s}", _addr.c_str());
-
-    for (auto &it : _interfaces) {
-        it.second->reconnect();
-    }
+    spdlog::debug("Reconnected to {:s}", _url.c_str());
 
     return scan(SCAN_TIMEOUT);
 }
@@ -190,7 +199,7 @@ int Client::subscribe(const std::string &topic, const std::function<void(const s
         _pahoClient->subscribe(topic, 0)->wait_for(std::chrono::seconds(CONN_TIMEOUT));
     }
     catch (const mqtt::exception& exc) {
-        spdlog::error("Could not subscribe to {:s} : {:s}", _addr, exc.what());
+        spdlog::error("Could not subscribe to {:s} : {:s}", _url, exc.what());
         return -1;
     }
 
@@ -212,7 +221,7 @@ int Client::unsubscribe(const std::string &topic)
         _pahoClient->unsubscribe(topic)->wait_for(std::chrono::seconds(CONN_TIMEOUT));
     }
     catch (const mqtt::exception& exc) {
-        spdlog::error("Could not unsubscribe from {:s} : {:s}", _addr, exc.what());
+        spdlog::error("Could not unsubscribe from {:s} : {:s}", _url, exc.what());
         return -1;
     }
 
@@ -230,7 +239,7 @@ int Client::publish(const std::string &topic, const void *payload, int len)
         _pahoClient->publish(topic, payload, len, 0, false)->wait_for(std::chrono::seconds(CONN_TIMEOUT));
     }
     catch (const mqtt::exception& exc) {
-        spdlog::error("Could not publish to {:s} : {:s}", _addr, exc.what());
+        spdlog::error("Could not publish to {:s} : {:s}", _url, exc.what());
         return -1;
     }
     return 0;
@@ -241,27 +250,38 @@ int Client::publish(const std::string &topic, const std::string &payload)
     return publish(topic, payload.c_str(), payload.length());
 }
 
-bool Client::registerInterface(Interface &interface, const std::string &name)
+int Client::registerInterface(Interface &interface, const std::string &name)
 {
-    bool ret = false;
     std::string &baseTopic = (std::string &)name;
 
     if (utils::string::StartsWith(name, "pza/") == false) {
         // is an alias
+        pza::Core::ShowAliases();
+
+        _alias->show();
+
         if (_alias && _alias->interfaces.count(name) > 0) {
             baseTopic = _alias->interfaces[name];
         }
         else {
-            spdlog::error("Alias {:s} not found.", name);
-            return false;
+            spdlog::error("Alias interface {:s} not found.", name);
+            return -1;
         }
     }
     if (_scanResult.count(baseTopic)) {
         _interfaces[baseTopic] = &interface;
         interface.setBaseTopic(baseTopic);
-        ret = true;
+        return 0;
     }
-    return ret;
+    return -1;
+}
+
+void Client::autoRegisterInterfaces(void)
+{
+    for (auto const &interface : _scanResult) {
+        if (_interfaces.count(interface.first) == 0)
+            Interface::CreateInterface(this, interface.first, interface.second);
+    }
 }
 
 void Client::unconnectInterfaces(void)
@@ -288,18 +308,24 @@ void Client::unregisterInterfaces(void)
 void Client::onScan(const std::string &topic, const std::string &payload)
 {
     json data;
-    std::string tmp;
-
+    std::string type;
     std::lock_guard<std::mutex> lock(_mtx);
 
     if (utils::json::ParseJson(payload, data) == -1)
         return ;
 
-    if (utils::json::KeyExists(data, "info") && utils::json::ToString(data["info"], "type", tmp) == 0) {
-        if (tmp == "platform")
+    if (utils::json::KeyExists(data, "info") && utils::json::ToString(data["info"], "type", type) == 0) {
+        std::string name = topic.substr(0, topic.find("/atts/info"));
+        
+        if (type == "platform") {
             utils::json::ToInteger(data["info"], "interfaces", _scanCountPlatform);
-        _scanResult.emplace(topic.substr(0, topic.find("/atts/info")));
-        _scanCountInterfaces++;
+            _scanResult[name] = Interface::StringToType(type);
+            _scanCountInterfaces++;
+        }
+        else if (type != "unknown") {
+            _scanResult[name] = Interface::StringToType(type);
+            _scanCountInterfaces++;
+        }
     }
     _cv.notify_all();
 }
@@ -314,34 +340,47 @@ void Client::showScanResults(void)
         return ;
     spdlog::debug("List:");
     for (auto it = _scanResult.begin(); it != _scanResult.end(); it++) {
-        spdlog::debug("  Interface {:02d}: {:s}", std::distance(_scanResult.begin(), it), *it);
+        spdlog::debug("  Interface {:02d}: {:s}", std::distance(_scanResult.begin(), it), it->first.c_str());
     }
     spdlog::debug("--------------------");
 }
 
 int Client::scan(int timeout)
 {
-    int ret = 0;
     std::unique_lock<std::mutex> l(_mtx);
 
+    _scanAbort = false;
     _scanCountInterfaces = 0;
     _scanCountPlatform = 0;
     _scanResult.clear();
     spdlog::debug("Start scanning...");
     subscribe("pza/+/+/+/+/info", std::bind(&Client::onScan, this, std::placeholders::_1, std::placeholders::_2));
     publish("pza", "*");
-    auto const _scanComplete = [&](){ return (_scanCountInterfaces != 0 && _scanCountInterfaces == _scanCountPlatform); };
-    if (_cv.wait_for(l, std::chrono::seconds(timeout), _scanComplete) == false) {
+    auto const _scanComplete = [&](){return (_scanAbort || (_scanCountInterfaces != 0 && _scanCountInterfaces == _scanCountPlatform)); };
+
+    if (_cv.wait_for(l, std::chrono::seconds(SCAN_TIMEOUT), _scanComplete) == false) {
         if (_scanCountPlatform == 0)
             spdlog::error("No Panduza platform seems to be running on the server.");
         else
             spdlog::warn("Scan didn't finish after {:d} seconds. Found {:d} interfaces but expected {:d}.", timeout, _scanCountInterfaces, _scanCountPlatform);
-        ret = -1;
+        return -1;
     }
-    else
+    else if (_scanAbort) {
+        spdlog::warn("Scan aborted.");
+        return -1;
+    }
+    else {
         spdlog::debug("Scan successful! Found {:d} interfaces.", _scanCountInterfaces);
-    showScanResults();
-    return ret;
+        showScanResults();
+    }
+
+    for (auto const &it : _scanResult) {
+        if (_interfaces.count(it.first) > 0) {
+            _interfaces.at(it.first)->reconnect();
+        }
+    }
+
+    return 0;
 }
 
 Client::~Client()

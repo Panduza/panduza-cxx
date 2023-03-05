@@ -17,14 +17,14 @@ protected:
             Core::LoadAliasesFromFile(props + std::string("/alias/good.json"));
         else
             Core::LoadAliasesFromFile("alias/good.json");
-        client = std::make_unique<Client>("good");
+        client = std::make_shared<Client>("good");
         ASSERT_EQ(client->connect(), 0);
-        psu = std::make_unique<Psu>(*client, "psu");
-        ASSERT_EQ(psu->init(), 0);
+        psu = std::make_unique<Psu>("psu");
+        psu->bindToClient(client.get());
         ASSERT_TRUE(psu->isRunning());
     }
 
-    std::unique_ptr<Client> client;
+    std::shared_ptr<Client> client;
     std::unique_ptr<Psu> psu;
 };
 

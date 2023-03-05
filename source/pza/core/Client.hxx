@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 #include <pza/core/Core.hxx>
 #include <pza/core/Alias.hxx>
+#include <pza/core/Interface.hxx>
 #include <fnmatch.h>
 #include <set>
 #include <unistd.h>
@@ -20,8 +21,6 @@
 
 namespace pza
 {
-    class Interface;
-
     class Client : public virtual mqtt::callback
     {
         friend class Interface;
@@ -35,10 +34,13 @@ namespace pza
         int connect(void);
         int disconnect(void);
         int reconnect(void);
-        void init(const std::string &alias);
-        void init(const std::string &addr, const std::string &id);
-        void reset(const std::string &alias);
-        void reset(const std::string &addr, const std::string &id);
+        void setUrl(const std::string &addr, int port);
+        void initAlias(const std::string &alias);
+        void init(const std::string &addr, int port, const std::string &id = "");
+        void init(const std::string &url, const std::string &id = "");
+        void resetAlias(const std::string &alias);
+        void reset(const std::string &addr, int port, const std::string &id = "");
+        void reset(const std::string &url, const std::string &id = "");
         void destroy(void);
         bool isSetup(void) const
         {
@@ -46,9 +48,10 @@ namespace pza
         }
 
         std::string formatAddress(const std::string &addr, int port);
-        const std::string &address(void) const
+
+        const std::string &url(void) const
         {
-            return _addr;
+            return _url;
         }
         const std::string &id(void) const
         {
@@ -57,14 +60,39 @@ namespace pza
 
         bool isConnected(void) const
         {
-            int ret = false;
-
-            if (_isSetup)
-                ret = _pahoClient->is_connected();
-            return ret;
+            return (_isSetup && _pahoClient->is_connected());
         }
 
         int scan(int timeout = SCAN_TIMEOUT);
+
+        const std::unordered_map<std::string, Interface *> &interfaces(void) const
+        {
+            return _interfaces;
+        }
+
+        const std::vector<Interface *> activeInterfaces(void) const
+        {
+            std::vector<Interface *> ret;
+            
+            for (auto &it : _interfaces) {
+                if (it.second->state() == Interface::State::Running)
+                    ret.push_back(it.second);
+            }
+            return ret;
+        }
+
+        void autoRegisterInterfaces(void);
+
+        template<typename N>
+        N *findInterface(const std::string &name)
+        {
+            static_assert(std::is_class<N>::value, "N must be a class or struct type");
+
+            auto it = _interfaces.find(name);
+            if (it == _interfaces.end())
+                return nullptr;
+            return dynamic_cast<N *>(it->second);
+        }
 
     private:
         void connection_lost(const std::string &cause) override
@@ -83,23 +111,26 @@ namespace pza
         int publish(const std::string &topic, const void *payload, int len);
         int publish(const std::string &topic, const std::string &payload);
         void unconnectInterfaces(void);
-        bool registerInterface(Interface &interface, const std::string &name);
+        int registerInterface(Interface &interface, const std::string &name);
         void unregisterInterface(Interface &interface);
         void unregisterInterfaces(void);
+        
         std::string _generateRandomID(void);
+        void abortScan(void);
 
         bool _isSetup = false;
         std::unique_ptr<mqtt::async_client> _pahoClient;
         callback _cb;
-        std::string _addr;
+        std::string _url;
         std::string _id;
         Alias *_alias = nullptr;
-        std::set<std::string> _scanResult;
+        std::unordered_map<std::string, enum Interface::Type> _scanResult;
         std::unordered_map<std::string, Interface *> _interfaces;
         std::unordered_map<std::string, std::function<void(const std::string &, const std::string &)>> _listeners;
         std::condition_variable _cv;
         std::mutex _mtx;
         int _scanCountPlatform = 0;
         int _scanCountInterfaces = 0;
+        bool _scanAbort = false;
     };
 };

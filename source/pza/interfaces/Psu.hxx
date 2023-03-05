@@ -95,7 +95,7 @@ namespace pza
     class Psu : public Interface
     {
     public:
-        explicit Psu(Client &client, const std::string &name);
+        explicit Psu(const std::string &name);
 
         const std::vector<Attribute *> &getAttributes() const override
         {

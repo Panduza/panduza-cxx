@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 
 using json = nlohmann::json;
 
@@ -114,7 +115,11 @@ namespace pza
             json data;
 
             data[this->_name] = value;
-            _callback(data, ensure);
+            if (_callback)
+                _callback(data, ensure);
+            else {
+                spdlog::error("No callback set for field.. Make sure the interface is bound to a client.");
+            }
         }
 
         void aset(const T &value)
@@ -133,10 +138,6 @@ namespace pza
             _callback = callback;
         }
 
-        std::function<void(const json &data, bool ensure)> _callback = [](const json &data, bool ensure)
-        {
-            (void)data;
-            (void)ensure;
-        };
+        std::function<void(const json &data, bool ensure)> _callback;
     };
 };

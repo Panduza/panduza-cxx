@@ -19,8 +19,9 @@ protected:
         Core::LoadAliasesFromFile(props + std::string("alias/good.json"));
         client = std::make_unique<Client>("good");
         ASSERT_EQ(client->connect(), 0);
-        psu = std::make_unique<Psu>(*client, "psu");
-        ASSERT_EQ(psu->init(), 0);
+        psu = std::make_unique<Psu>("psu");
+        std::cout << client.get() << std::endl;
+        psu->bindToClient(client.get());
         ASSERT_TRUE(psu->isRunning());
     }
 
