@@ -35,10 +35,28 @@ namespace pza
             return _value;
         }
 
+        void registerCb(const std::function<void()> &callback)
+        {
+            _get_callbacks.push_back(callback);
+        }
+
+        void unregisterCb(const std::function<void()> &callback)
+        {
+            auto it = std::find(_get_callbacks.begin(), _get_callbacks.end(), callback);
+            if (it != _get_callbacks.end())
+            {
+                _get_callbacks.erase(it);
+            }
+        }
+
     protected:
         void _setValue(const T &value)
         {
             _value = value;
+            for (auto &cb : _get_callbacks)
+            {
+                cb();
+            }
         }
 
         const json::value_t &_getJsonType() const override
@@ -59,6 +77,8 @@ namespace pza
         std::string _name;
         T _value = T();
         json::value_t jsonType;
+        using t_cb = std::function<void()>;
+        std::vector<t_cb> _get_callbacks;
 
     private:
         virtual void setCallback(const std::function<void(const json &data, bool ensure)> &callback) override

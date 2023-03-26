@@ -28,12 +28,12 @@ protected:
     std::unique_ptr<Psu> psu;
 };
 
-TEST_F(PsuTest, State)
+TEST_F(PsuTest, Enable)
 {
-    psu->state.value.set("on");
-    EXPECT_EQ(psu->state.value.get(), "on");
-    psu->state.value.set("off");
-    EXPECT_EQ(psu->state.value.get(), "off");
+    psu->enable.value.set(true);
+    EXPECT_EQ(psu->enable.value.get(), true);
+    psu->enable.value.set(false);
+    EXPECT_EQ(psu->enable.value.get(), false);
 }
 
 TEST_F(PsuTest, VoltsValue)

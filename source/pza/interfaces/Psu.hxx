@@ -35,11 +35,11 @@ namespace pza
         RoField<int> decimals{"decimals"};
     };
 
-    class AState : public Attribute
+    class AEnable : public Attribute
     {
     public:
-        AState()
-            : Attribute("state")
+        AEnable()
+            : Attribute("enable")
         {
         }
 
@@ -52,7 +52,7 @@ namespace pza
             {"value", &value},
         };
 
-        RwField<std::string> value{"value"};
+        RwField<bool> value{"value"};
     };
 
     class AVolts : public AUnit
@@ -87,9 +87,14 @@ namespace pza
         }
 
         std::unordered_map<std::string, FieldBase *> _fields = {
-            {"ovp", &ovp}};
+            {"ovp", &ovp},
+            {"ocp", &ocp},
+            {"silent", &silent}
+        };
 
         RwField<bool> ovp{"ovp"};
+        RwField<bool> ocp{"ocp"};
+        RwField<bool> silent{"silent"};
     };
 
     class Psu : public Interface
@@ -97,14 +102,24 @@ namespace pza
     public:
         explicit Psu(const std::string &name);
 
+        Type type(void) const override
+        {
+            return Type::Psu;
+        }
+
         const std::vector<Attribute *> &getAttributes() const override
         {
             return _attributes;
         }
 
-        const std::vector<Attribute *> _attributes = {&state, &volts, &amps, &settings};
+        const std::vector<Attribute *> _attributes = {
+            &enable,
+            &volts,
+            &amps,
+            &settings
+        };
 
-        AState state;
+        AEnable enable;
         AVolts volts;
         AAmps amps;
         ASettings settings;

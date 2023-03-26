@@ -13,16 +13,15 @@ namespace pza
 
     class Interface
     {
+        friend class Client;
+
+    public:
         enum class State
         {
             Orphan,
             Unconnected,
             Running
         };
-
-        friend class Client;
-
-    public:
 
         enum class Type
         {
@@ -44,15 +43,25 @@ namespace pza
             return _topic.interface();
         }
 
-        Type type(void) const
+        virtual Type type(void) const = 0;
+
+        const std::string typeName(void) const
         {
-            return _type;
+            return TypeToString(_type);
         }
 
         State state(void) const
         {
             return _state;
         }
+
+        static void CreateInterface(Client *client, const std::string &name, Interface::Type type);
+
+    protected:
+        explicit Interface(const std::string &name);
+        ~Interface();
+
+        virtual const std::vector<Attribute *> &getAttributes() const = 0;
 
         static std::string TypeToString(Type type)
         {
@@ -75,13 +84,6 @@ namespace pza
             return Type::Unknown;
         }
 
-        static void CreateInterface(Client *client, const std::string &name, Interface::Type type);
-
-    protected:
-        explicit Interface(const std::string &name);
-        ~Interface();
-
-        virtual const std::vector<Attribute *> &getAttributes() const = 0;
         Type _type = Type::Unknown;
 
     private:

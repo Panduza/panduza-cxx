@@ -128,6 +128,7 @@ namespace pza
         explicit Attribute(const std::string &name)
             : _name(name)
         {
+
         }
 
     private:

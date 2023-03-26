@@ -8,6 +8,18 @@
                 {
                     "name" : "My Psu",
                     "driver" : "py.psu.fake"
+                },
+	    	{
+                    "name" : "My Psu 2",
+                    "driver" : "py.psu.fake"
+                },
+		{
+                    "name" : "My Psu 3",
+                    "driver" : "py.psu.fake"
+                },
+		{
+                    "name" : "My Psu 4",
+                    "driver" : "py.psu.fake"
                 }
             ]
         }
