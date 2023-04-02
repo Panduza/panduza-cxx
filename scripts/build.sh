@@ -17,6 +17,6 @@ fi
 
 conan install .. --build=missing -s build_type=$BUILD_TYPE
 conan build ..
-conan export-pkg .. -f
-conan upload "libpza-cxx" -r conan-local -c
+#conan export-pkg .. -f
+#conan upload "libpza-cxx" -r conan-local -c
 popd

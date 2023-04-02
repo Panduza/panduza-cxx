@@ -1,6 +1,8 @@
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
 
+enable_testing()
+
 include(GoogleTest)
 
 add_executable(unitest

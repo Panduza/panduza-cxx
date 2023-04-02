@@ -118,7 +118,7 @@ void Interface::sendMessage(const std::string &payload)
 
 Interface::~Interface()
 {
-    if (_client && _client->isSetup() == true) {
+    if (_client && _client->isConnected()) {
         _client->unregisterInterface(*this);
     }
 }

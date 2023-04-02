@@ -11,7 +11,6 @@ target_sources(${LIBRARY_NAME}
     pza/core/Interface.cxx
     pza/core/Topic.cxx
     pza/core/Attribute.cxx
-    pza/core/Field.cxx
     pza/interfaces/Psu.cxx
     pza/utils/Utils.cxx
 

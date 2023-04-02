@@ -4,7 +4,6 @@
 
 int main(void)
 {
-
     pza::Core::SetLogLevel(pza::Core::LogLevel::Trace);
     pza::Core::LoadAliases(R"({
         "local": {

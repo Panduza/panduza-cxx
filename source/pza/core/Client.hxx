@@ -35,17 +35,12 @@ namespace pza
         int disconnect(void);
         int reconnect(void);
         void setUrl(const std::string &addr, int port);
-        void initAlias(const std::string &alias);
+        void initFromAlias(const std::string &alias);
         void init(const std::string &addr, int port, const std::string &id = "");
-        void init(const std::string &url, const std::string &id = "");
         void resetAlias(const std::string &alias);
         void reset(const std::string &addr, int port, const std::string &id = "");
         void reset(const std::string &url, const std::string &id = "");
         void destroy(void);
-        bool isSetup(void) const
-        {
-            return _isSetup;
-        }
 
         std::string formatAddress(const std::string &addr, int port);
 
@@ -60,7 +55,7 @@ namespace pza
 
         bool isConnected(void) const
         {
-            return (_isSetup && _pahoClient->is_connected());
+            return (_pahoClient != nullptr && _pahoClient->is_connected());
         }
 
         int scan(int timeout = SCAN_TIMEOUT);
@@ -103,6 +98,7 @@ namespace pza
             unconnectInterfaces();
         }
 
+        void _init(const std::string &url, const std::string &id = "");
         void onScan(const std::string &topic, const std::string &payload);
         void showScanResults(void);
         void message_arrived(mqtt::const_message_ptr msg) override;
@@ -114,11 +110,9 @@ namespace pza
         int registerInterface(Interface &interface, const std::string &name);
         void unregisterInterface(Interface &interface);
         void unregisterInterfaces(void);
-        
         std::string _generateRandomID(void);
         void abortScan(void);
 
-        bool _isSetup = false;
         std::unique_ptr<mqtt::async_client> _pahoClient;
         callback _cb;
         std::string _url;

@@ -3,8 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <sys/stat.h>
-#include <dirent.h>
+#include <system_error>
 
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>

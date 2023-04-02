@@ -6,10 +6,16 @@ import re
 class PzaCxx(ConanFile):
     name = "libpza-cxx"
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
+    options = {
+        "shared": [True, False],
+        "build_examples": [True, False]
+    }
+    default_options = {
+        "shared": True,
+        "build_examples": True
+    }
     generators = "CMakeDeps", "CMakeToolchain"
-    default_options = {"shared": True}
-    exports_sources = "CMakeLists.txt", "source/*", "version.h.in", "CHANGELOG.md", "test/*"
+    exports_sources = "CMakeLists.txt", "source/*", "version.h.in", "CHANGELOG.md", "test/*", "cmake/*", "examples/*"
 
     def requirements(self):
         self.options["*"].shared = self.options.shared
@@ -35,6 +41,7 @@ class PzaCxx(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+        tc.variables["BUILD_EXAMPLES"] = self.options.build_examples
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
@@ -49,6 +56,6 @@ class PzaCxx(ConanFile):
         cmake.install()
 
     def package_info(self):
-	    self.cpp_info.name = "Panduza C++ Library"
-	    suffix = "-debug" if self.settings.build_type == "Debug" else ""
-	    self.cpp_info.libs = [f"pza-cxx{suffix}"]
+        self.cpp_info.name = "Panduza C++ Library"
+        suffix = "-debug" if self.settings.build_type == "Debug" else ""
+        self.cpp_info.libs = [f"pza-cxx{suffix}"]

@@ -10,38 +10,33 @@ Client::Client(const std::string &addr, int port, const std::string &id)
 
 Client::Client(const std::string &alias)
 {
-    initAlias(alias);
+    initFromAlias(alias);
 }
 
-void Client::initAlias(const std::string &alias)
+void Client::initFromAlias(const std::string &alias)
 {
     _alias = Core::Get().findAlias(alias);
-    if (_alias) {
-        std::string id_tmp = _alias->id;
-        if (id_tmp == "")
-            id_tmp = _generateRandomID();
-        init(formatAddress(_alias->url, _alias->port), id_tmp);
-    }
+    if (_alias)
+        _init(formatAddress(_alias->url, _alias->port), _alias->id);
 }
 
 void Client::init(const std::string &addr, int port, const std::string &id)
 {
-    init(formatAddress(addr, port), (id == "") ? _generateRandomID() : id);
+    _init(formatAddress(addr, port), (id == "") ? _generateRandomID() : id);
 }
 
-void Client::init(const std::string &url, const std::string &id)
+void Client::_init(const std::string &url, const std::string &id)
 {
     _url = url;
     _id = id;
     _pahoClient = std::make_unique<mqtt::async_client>(_url, id);
     _pahoClient->set_callback(_cb);
-    _isSetup = true;
 }
 
 void Client::resetAlias(const std::string &alias)
 {
     destroy();
-    initAlias(alias);
+    initFromAlias(alias);
 }
 
 void Client::reset(const std::string &addr, int port, const std::string &id)
@@ -53,7 +48,7 @@ void Client::reset(const std::string &addr, int port, const std::string &id)
 void Client::reset(const std::string &url, const std::string &id)
 {
     destroy();
-    init(url, id);
+    _init(url, id);
 }
 
 void Client::destroy(void)
@@ -66,7 +61,6 @@ void Client::destroy(void)
     }
     _pahoClient.reset();
     _listeners.clear();
-    _isSetup = false;
 }
 
 std::string Client::formatAddress(const std::string &addr, int port)
@@ -97,7 +91,7 @@ int Client::connect(void)
 {
     mqtt::connect_options opts;
 
-    if (isSetup() == false)
+    if (_pahoClient == nullptr)
         return -1;
     
     opts.set_keep_alive_interval(20);
@@ -122,7 +116,7 @@ int Client::connect(void)
 
 int Client::disconnect(void)
 {
-    if (_isSetup == false)
+    if (_pahoClient == nullptr)
         return -1;
 
     abortScan();
@@ -142,7 +136,7 @@ int Client::disconnect(void)
 
 int Client::reconnect(void)
 {
-    if (_isSetup == false)
+    if (_pahoClient == nullptr)
         return -1;
 
     spdlog::debug("Attempting to reconnect to {:s}", _url.c_str());
@@ -192,7 +186,7 @@ int Client::subscribe(const std::string &topic, const std::function<void(const s
 {
     std::string s = topic;
 
-    if (_isSetup == false)
+    if (_pahoClient == nullptr)
         return -1;
 
     try {
@@ -213,9 +207,8 @@ int Client::subscribe(const std::string &topic, const std::function<void(const s
 
 int Client::unsubscribe(const std::string &topic)
 {
-    if (_isSetup == false)
+    if (_pahoClient == nullptr)
         return -1;
-
 
     try {
         _pahoClient->unsubscribe(topic)->wait_for(std::chrono::seconds(CONN_TIMEOUT));
@@ -232,7 +225,7 @@ int Client::unsubscribe(const std::string &topic)
 
 int Client::publish(const std::string &topic, const void *payload, int len)
 {
-    if (_isSetup == false)
+    if (_pahoClient == nullptr)
         return -1;
 
     try {

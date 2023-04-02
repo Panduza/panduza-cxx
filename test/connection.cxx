@@ -76,25 +76,6 @@ TEST_P(BaseConnFail, ReconnectFail)
     EXPECT_EQ(client->reconnect(), -1);
 }
 
-TEST_P(BaseConnSuccess, Setup)
-{
-    EXPECT_TRUE(client->isSetup());
-}
-
-TEST_P(BaseConnSuccess, Destroy)
-{
-    EXPECT_TRUE(client->isSetup());
-    client->destroy();
-    EXPECT_FALSE(client->isSetup());
-}
-
-TEST_P(BaseConnSuccess, Reset)
-{
-    std::string url = client->formatAddress(GetParam().first, GetParam().second);
-    client->reset(url);
-    EXPECT_TRUE(client->isSetup());
-}
-
 INSTANTIATE_TEST_SUITE_P(TestConnectionSuccess, BaseConnSuccess,
                          ::testing::Values(
                              std::make_pair("localhost", 1883),
@@ -127,14 +108,12 @@ TEST_F(BaseClientAlias, ConnectBadFormat)
         }
     })");
     auto client = createClient("local");
-    EXPECT_FALSE(client->isSetup());
     EXPECT_EQ(client->connect(), -1);
 }
 
 TEST_F(BaseClientAlias, ConnectDoesNotExist)
 {
     auto client = createClient("nothing");
-    EXPECT_FALSE(client->isSetup());
     EXPECT_EQ(client->connect(), -1);
 }
 
@@ -168,7 +147,6 @@ TEST_F(BaseClientAlias, ConnectToBadAndResetToAlias)
     })");
 
     auto client = createClient("local");
-    EXPECT_FALSE(client->isSetup());
     EXPECT_EQ(client->connect(), -1);
 
     loadAlias(R"({
@@ -179,7 +157,6 @@ TEST_F(BaseClientAlias, ConnectToBadAndResetToAlias)
     })");
 
     client->resetAlias("local");
-    EXPECT_TRUE(client->isSetup());
     EXPECT_EQ(client->connect(), 0);
 }
 
@@ -193,9 +170,7 @@ TEST_F(BaseClientAlias, ConnectToBadAndResetToRaw)
     })");
 
     auto client = createClient("local");
-    EXPECT_FALSE(client->isSetup());
     EXPECT_EQ(client->connect(), -1);
     client->reset("localhost", "1883");
-    EXPECT_TRUE(client->isSetup());
     EXPECT_EQ(client->connect(), 0);
 }

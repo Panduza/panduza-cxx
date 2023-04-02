@@ -15,22 +15,24 @@ void Core::SetLogLevel(const enum LogLevel &level)
 
 int Core::_LoadInterfaces(const json &data, std::unordered_map<std::string, std::string> &map)
 {
-    json tmp;
-
     if (data.contains("interfaces") == false)
         return 0;
 
-    if (utils::json::ToObject(data, "interfaces", tmp) == -1)
+    const json &interfaces = data["interfaces"];
+
+    if (interfaces.is_object() == false) {
+        spdlog::error("Interfaces must be a JSON object");
         return -1;
+    }
 
-    for (auto const &item : tmp.items()) {
-        const std::string &key = item.key();
+    for (json::const_iterator it = interfaces.cbegin(); it != interfaces.cend(); ++it) {
+        const std::string &key = it.key();
 
-        if (tmp[key].is_string() == false) {
+        if (interfaces[key].is_string() == false) {
             spdlog::error("Interface alias {:s} must be a string", key);
             return -1;
         }
-        map[key] = tmp[key];
+        map[key] = interfaces[key];
     }
     return 0;
 }
@@ -42,15 +44,11 @@ void Core::LoadAliases(const std::string &s)
 
 void Core::LoadAliasesFromFile(const std::string &fileName)
 {
-    struct stat s;
+    std::stringstream buf;
 
     spdlog::trace("Reading alias from file {:s}", fileName);
 
-    if (stat(fileName.c_str(), &s) == -1) {
-        spdlog::error("Could not stat file {:s} : {:s}", fileName, strerror(errno));
-        return ;
-    }
-    if (!S_ISREG(s.st_mode)) {
+    if (std::filesystem::is_regular_file(fileName) == false) {
         spdlog::error("{:s} is not a regular file.", fileName);
         return ;
     }
@@ -61,10 +59,7 @@ void Core::LoadAliasesFromFile(const std::string &fileName)
         return ;
     }
 
-    std::stringstream buf;
-
     buf << file.rdbuf();
-
     _LoadAliasesFromJson(buf.str());
 }
 
@@ -94,32 +89,27 @@ void Core::_LoadAliasesFromJson(const std::string &payload)
 
 void Core::LoadAliasesFromDirectory(const std::string &dirName)
 {
-    struct stat s;
-    DIR* dir;
-    struct dirent* entry;
+    std::error_code ec;
+    std::filesystem::directory_entry dirEntry{dirName, ec};
 
-    if (stat(dirName.c_str(), &s) == -1) {
-        spdlog::error("Could not stat directory {:s} : {:s}", dirName, strerror(errno));
-        return ;
+    if (ec) {
+        spdlog::error("Could not access directory {:s} : {:s}", dirName, ec.message());
+        return;
     }
 
-    if (!S_ISDIR(s.st_mode)) {
+    if (!dirEntry.is_directory(ec)) {
         spdlog::error("{:s} is not a directory.", dirName);
-        return ;
+        return;
     }
 
-    dir = opendir(dirName.c_str());
-    if (dir == nullptr) {
-        spdlog::error("Could not open directory {:s} : {:s}", dirName, strerror(errno));
-        return ;
+    for (const auto &entry : std::filesystem::directory_iterator{dirName}) {
+        if (entry.is_regular_file(ec)) {
+            LoadAliasesFromFile(entry.path().string());
+        }
     }
 
-    while ((entry = readdir(dir)) != nullptr) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-            continue;
-        LoadAliasesFromFile(dirName + "/" + entry->d_name);
-    }
-    closedir(dir);
+    if (ec)
+        spdlog::error("Error while iterating through directory {:s} : {:s}", dirName, ec.message());
 }
 
 void Core::_AddAlias(const Alias &alias)
@@ -143,9 +133,8 @@ Alias *Core::findAlias(const std::string &name)
 
 void Core::RemoveAlias(const std::string &name)
 {
-    if (Core::Get()._aliases.count(name) != 0) {
+    if (Core::Get()._aliases.count(name) != 0)
         Core::Get()._aliases.erase(name);
-    }
     else
         spdlog::error("Alias named {:s} does not exist", name);
 }

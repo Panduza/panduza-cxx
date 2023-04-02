@@ -37,15 +37,24 @@ namespace pza
 
         void registerCb(const std::function<void()> &callback)
         {
+            if (!callback)
+            {
+                std::cerr << "Invalid callback" << std::endl;
+                return;
+            }
+
             _get_callbacks.push_back(callback);
         }
 
         void unregisterCb(const std::function<void()> &callback)
         {
-            auto it = std::find(_get_callbacks.begin(), _get_callbacks.end(), callback);
-            if (it != _get_callbacks.end())
+            if (callback)
             {
-                _get_callbacks.erase(it);
+                auto it = std::find(_get_callbacks.begin(), _get_callbacks.end(), callback);
+                if (it != _get_callbacks.end())
+                {
+                    _get_callbacks.erase(it);
+                }
             }
         }
 
@@ -104,9 +113,13 @@ namespace pza
             {
                 jsonType = json::value_t::string;
             }
-            else
+            else if (typeid(T) == typeid(std::nullptr_t))
             {
                 jsonType = json::value_t::null;
+            }
+            else
+            {
+                throw std::runtime_error("Invalid type");
             }
         }
     };
@@ -116,9 +129,10 @@ namespace pza
     {
     public:
         explicit RoField(const std::string &name)
-            : Field<T>(name){
+            : Field<T>(name)
+        {
 
-              };
+        }
     };
 
     template <typename T>
@@ -126,9 +140,10 @@ namespace pza
     {
     public:
         explicit RwField(const std::string &name)
-            : Field<T>(name){
+            : Field<T>(name)
+        {
 
-              };
+        }
 
         void _set(const T &value, bool ensure)
         {
