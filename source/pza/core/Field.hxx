@@ -149,12 +149,15 @@ namespace pza
         {
             json data;
 
-            data[this->_name] = value;
-            if (_callback)
-                _callback(data, ensure);
-            else {
+            if (ensure)
+                spdlog::trace("Set request");
+
+            if (!_callback) {
                 spdlog::error("No callback set for field.. Make sure the interface is bound to a client.");
+                return ;
             }
+            data[this->_name] = value;
+            _callback(data, ensure);
         }
 
         void aset(const T &value)
@@ -176,3 +179,5 @@ namespace pza
         std::function<void(const json &data, bool ensure)> _callback;
     };
 };
+
+

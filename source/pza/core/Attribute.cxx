@@ -38,6 +38,8 @@ void Attribute::onData(const json &json)
     std::lock_guard<std::mutex> lock(_mtx);
     for (auto it = json.begin(); it != json.end(); ++it)
     {
+        //print iterator value
+        spdlog::trace("Attribute {:s} received data for field {:s} with value {:s}", _name, it.key(), it.value().dump());
         auto field = getFields().find(it.key());
         if (field != getFields().end())
         {
@@ -64,6 +66,8 @@ void Attribute::onData(const json &json)
                     Field<std::string> *f = static_cast<Field<std::string> *>(field->second);
                     f->_setValue(it.value());
                 }
+                _waitingForResponse = false;
+                _cv.notify_all();
             }
             else
             {
@@ -71,18 +75,22 @@ void Attribute::onData(const json &json)
             }
         }
     }
-    _waitingForResponse = false;
-    _cv.notify_all();
+    
 }
 
 void Attribute::dataFromField(const json &data, bool ensure)
 {
     json json;
+
     json[_name] = data;
+
     if (ensure)
         _waitingForResponse = true;
-    if (_callback)
+
+    if (_callback) {
+        spdlog::trace("Calling callback for attribute {:s}", _name);
         _callback(json);
+    }
     else {
         spdlog::error("No callback set for attribute.. Make sure the interface is bound to a client.");
         return ;
@@ -92,6 +100,7 @@ void Attribute::dataFromField(const json &data, bool ensure)
         std::unique_lock<std::mutex> lock(_mtx);
         for (int i = 0; i < SET_TIMEOUT_RETRIES; i++)
         {
+            printf("And block\n");
             if (_cv.wait_for(lock, std::chrono::seconds(SET_TIMEOUT), [&]()
                     { return !_waitingForResponse; }) == true)
                 break;

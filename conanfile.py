@@ -14,7 +14,7 @@ class PzaCxx(ConanFile):
         "shared": True,
         "build_examples": True
     }
-    generators = "CMakeDeps", "CMakeToolchain"
+    generators = "CMakeDeps", "CMakeToolchain", "virtualrunenv"
     exports_sources = "CMakeLists.txt", "source/*", "version.h.in", "CHANGELOG.md", "test/*", "cmake/*", "examples/*"
 
     def requirements(self):

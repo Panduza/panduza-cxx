@@ -168,6 +168,8 @@ void Client::message_arrived(mqtt::const_message_ptr msg)
     std::string topic = msg->get_topic();
     std::string payload = msg->to_string();
 
+    printf("LOL\n");
+
     spdlog::trace("Received message on topic \"{:s}\" : \"{:s}\"", topic, payload);
 
     if (_listeners.count(topic) > 0) {
@@ -250,8 +252,6 @@ int Client::registerInterface(Interface &interface, const std::string &name)
     if (utils::string::StartsWith(name, "pza/") == false) {
         // is an alias
         pza::Core::ShowAliases();
-
-        _alias->show();
 
         if (_alias && _alias->interfaces.count(name) > 0) {
             baseTopic = _alias->interfaces[name];

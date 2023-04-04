@@ -11,7 +11,7 @@ int main(void)
             "port": 1883,
             "interfaces":
             {
-                "psu" : "pza/machine/py.psu.fake/My Psu"
+                "psu" : "pza/test/power/psu_1"
             }
         }
     })");
@@ -24,7 +24,8 @@ int main(void)
     auto psu = std::make_unique<pza::Psu>("psu");
     psu->bindToClient(client.get());
 
-    psu->volts.goal.set(4.2);
-
+    psu->enable.value.set(false);
+    psu->enable.value.set(true);
+    psu->enable.value.set(false);
     return 0;
 }
