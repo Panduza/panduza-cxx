@@ -29,7 +29,7 @@ target_link_libraries(${LIBRARY_NAME}
     PUBLIC
     spdlog::spdlog
     nlohmann_json::nlohmann_json
-    paho-mqtt-cpp::paho-mqtt-cpp
+    PahoMqttCpp::paho-mqttpp3
 )
 
 install(TARGETS ${LIBRARY_NAME}

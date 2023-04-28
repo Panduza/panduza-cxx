@@ -14,7 +14,7 @@ add_compile_options(-Wall -Wextra)
 set(SPDLOG_FMT_EXTERNAL 1)
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(paho-mqtt-cpp REQUIRED)
+find_package(PahoMqttCpp REQUIRED)
 find_package(GTest REQUIRED)
 find_package(cppcheck REQUIRED)
 
