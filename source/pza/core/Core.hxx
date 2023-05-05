@@ -16,7 +16,7 @@ using namespace nlohmann;
 
 namespace pza
 {
-    class Core
+    class PZA_DllExport Core
     {
     public:
         enum class LogLevel : int

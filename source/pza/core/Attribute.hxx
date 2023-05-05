@@ -10,7 +10,7 @@
 
 namespace pza
 {
-    class Attribute
+    class PZA_DllExport Attribute
     {
     protected:
         explicit Attribute(const std::string &name);

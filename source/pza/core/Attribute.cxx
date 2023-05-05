@@ -26,7 +26,7 @@ bool Attribute::isTypeCompatible(const json::value_t &value1, const json::value_
     constexpr auto INTEGER = json::value_t::number_integer;
     constexpr auto UNSIGNED = json::value_t::number_unsigned;
     constexpr auto FLOAT = json::value_t::number_float;
-    auto isNumber = [](const json::value_t &value)
+    auto isNumber = [&](const json::value_t &value)
     {
         return value == INTEGER || value == UNSIGNED || value == FLOAT;
     };

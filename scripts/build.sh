@@ -16,7 +16,20 @@ then
 fi
 
 conan install .. --build=missing -s build_type=$BUILD_TYPE
+
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
 conan build ..
-#conan export-pkg .. -f
-#conan upload "libpza-cxx" -r conan-local -c
+
+echo "==============================="
+echo "==============================="
+echo "==============================="
+
+conan export-pkg .. -f
+
+# Not working on windows... but I currently do not know what it is :-)
+# conan upload "libpza-cxx" -r conan-local -c 
+
 popd

@@ -4,10 +4,11 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <pza/xbuild/dllexport.h>
 
 namespace pza
 {
-    class Alias
+    class PZA_DllExport Alias
     {
     public:
         std::string id;

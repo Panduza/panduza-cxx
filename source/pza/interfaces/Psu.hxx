@@ -8,7 +8,7 @@ namespace pza
 {
     using namespace pza;
 
-    class AUnit : public Attribute
+    class PZA_DllExport AUnit : public Attribute
     {
     public:
         explicit AUnit(const std::string &name)
@@ -35,7 +35,7 @@ namespace pza
         RoField<int> decimals{"decimals"};
     };
 
-    class AEnable : public Attribute
+    class PZA_DllExport AEnable : public Attribute
     {
     public:
         AEnable()
@@ -55,7 +55,7 @@ namespace pza
         RwField<bool> value{"value"};
     };
 
-    class AVolts : public AUnit
+    class PZA_DllExport AVolts : public AUnit
     {
     public:
         AVolts()
@@ -64,7 +64,7 @@ namespace pza
         }
     };
 
-    class AAmps : public AUnit
+    class PZA_DllExport AAmps : public AUnit
     {
     public:
         AAmps()
@@ -73,7 +73,7 @@ namespace pza
         }
     };
 
-    class ASettings : public Attribute
+    class PZA_DllExport ASettings : public Attribute
     {
     public:
         ASettings()
@@ -97,7 +97,7 @@ namespace pza
         RwField<bool> silent{"silent"};
     };
 
-    class Psu : public Interface
+    class PZA_DllExport Psu : public Interface
     {
     public:
         explicit Psu(const std::string &name);

@@ -1,10 +1,10 @@
-add_library(${LIBRARY_NAME})
+add_library(${LIBRARY_NAME} SHARED)
 
 file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/source/*.hxx)
 
 target_sources(${LIBRARY_NAME}
     PRIVATE
-    
+
     pza/core/Core.cxx
     pza/core/Alias.cxx
     pza/core/Client.cxx
@@ -13,6 +13,9 @@ target_sources(${LIBRARY_NAME}
     pza/core/Attribute.cxx
     pza/interfaces/Psu.cxx
     pza/utils/Utils.cxx
+
+    pza/xbuild/getopt.c
+    pza/xbuild/fnmatch.c
 
     PUBLIC
 
@@ -31,6 +34,15 @@ target_link_libraries(${LIBRARY_NAME}
     nlohmann_json::nlohmann_json
     PahoMqttCpp::paho-mqttpp3
 )
+
+if (MSVC)
+    target_link_libraries(${LIBRARY_NAME}
+        PRIVATE
+        Shlwapi.lib
+    )
+endif ()
+
+
 
 install(TARGETS ${LIBRARY_NAME}
     FILE_SET HEADERS

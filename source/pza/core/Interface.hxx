@@ -11,7 +11,7 @@ namespace pza
     class Client;
     class Psu;
 
-    class Interface
+    class PZA_DllExport Interface
     {
         friend class Client;
 

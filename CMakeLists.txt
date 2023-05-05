@@ -9,21 +9,40 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(cmake/version.cmake)
 include(cmake/cppcheck.cmake)
 
-add_compile_options(-Wall -Wextra)
+
+
+
+if (MSVC)
+  set (HAVE_SYS_TYPES_H 1)
+  set (HAVE_STDINT_H    1)
+  set (HAVE_STDDEF_H    1) # used by CheckTypeSize module
+  set (HAVE_INTTYPES_H  0)
+  set (HAVE_UNISTD_H    0)
+  set (HAVE_SYS_STAT_H  1)
+  set (HAVE_SHLWAPI_H   1)
+endif ()
+
+
+
 
 set(SPDLOG_FMT_EXTERNAL 1)
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
-find_package(GTest REQUIRED)
-find_package(cppcheck REQUIRED)
+if(BUILD_TESTS)
+    find_package(GTest REQUIRED)
+    find_package(cppcheck REQUIRED)
+    add_compile_options(-Wall -Wextra)
+endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 configure_file("${CMAKE_SOURCE_DIR}/version.h.in" "${CMAKE_SOURCE_DIR}/source/pza/version.hxx")
 
 add_subdirectory(source)
-add_subdirectory(test)
+if(BUILD_TESTS)
+    add_subdirectory(test)
+endif()
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

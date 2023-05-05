@@ -6,12 +6,13 @@
 #include <pza/core/Core.hxx>
 #include <pza/core/Alias.hxx>
 #include <pza/core/Interface.hxx>
-#include <fnmatch.h>
 #include <set>
-#include <unistd.h>
 #include <condition_variable>
 #include <random>
 #include <mutex>
+
+#include <pza/xbuild/fnmatch.h>
+#include <pza/xbuild/unistd.h>
 
 #define DEFAULT_ADDR "localhost"
 #define DEFAULT_PORT 1883
@@ -19,9 +20,10 @@
 #define CONN_TIMEOUT 5 // in seconds
 #define SCAN_TIMEOUT 5 // in seconds
 
+
 namespace pza
 {
-    class Client : public virtual mqtt::callback
+    class PZA_DllExport Client : public virtual mqtt::callback
     {
         friend class Interface;
 

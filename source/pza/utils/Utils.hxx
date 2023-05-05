@@ -1,7 +1,8 @@
 #pragma once
 
-#include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
+#include <pza/xbuild/dllexport.h>
 
 namespace pza
 {

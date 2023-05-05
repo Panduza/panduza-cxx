@@ -3,10 +3,11 @@
 #include <string>
 #include <sstream>
 #include <array>
+#include <pza/xbuild/dllexport.h>
 
 namespace pza
 {
-    class Topic
+    class PZA_DllExport Topic
     {
     public:
         Topic() = default;
