@@ -37,6 +37,7 @@ class PzaCxx(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["BUILD_EXAMPLES"] = self.options.build_examples
+        tc.filename = "pzacxx_toolchain.cmake"
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
@@ -49,8 +50,3 @@ class PzaCxx(ConanFile):
     def package(self):
         cmake = CMake(self)
         cmake.install()
-
-    def package_info(self):
-        self.cpp_info.name = "Panduza C++ Library"
-        suffix = "-debug" if self.settings.build_type == "Debug" else ""
-        self.cpp_info.libs = [f"pza-cxx{suffix}"]
