@@ -9,12 +9,12 @@ namespace pza
 {
     class device;
 
-    class interface
+    class itface
     {
     public:
         friend class device;
 
-        interface(device *device, const std::string &name);
+        itface(device *device, const std::string &name);
 
         void register_attribute(attribute &attribute);
         void register_attributes(const std::vector<attribute*> &list);

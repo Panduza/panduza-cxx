@@ -49,7 +49,7 @@ int device::_set_identity(const std::string &payload)
     return 0;
 }
 
-void device::register_interface(interface &interface)
+void device::register_interface(itface &itface)
 {
-    _interfaces[interface._name] = &interface;
+    _interfaces[itface._name] = &itface;
 }

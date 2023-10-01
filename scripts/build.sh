@@ -21,6 +21,8 @@ function install_deps {
 	echo "Installing dependencies for $TARGET..."
 	if [ "$TARGET" = "Windows" ]; then
 		EXTRA_CONAN_ARGS="-pr:h ../conan_profiles/x86_64_Cross_Windows"
+	else
+		EXTRA_CONAN_ARGS="-pr:h ../conan_profiles/x86_64_Linux"
 	fi
 	mkdir -p $BUILD_DIR
 	cd $BUILD_DIR

@@ -3,7 +3,7 @@
 using namespace pza;
 
 meter::meter(device *device, const std::string &name)
-    : interface(device, name),
+    : itface(device, name),
     _measure("measure")
 {
     _measure.add_ro_field<double>("value");

@@ -14,7 +14,7 @@ namespace pza
     class attribute
     {
     public:
-        friend class interface;
+        friend class itface;
 
         explicit attribute(const std::string &name);
 

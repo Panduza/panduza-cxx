@@ -11,7 +11,7 @@ namespace pza
 {
     class device;
 
-    class bps_chan_ctrl : public interface
+    class bps_chan_ctrl : public itface
     {
     public:
         using ptr = std::shared_ptr<bps_chan_ctrl>;

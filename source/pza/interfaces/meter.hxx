@@ -3,7 +3,7 @@
 #include <pza/core/interface.hxx>
 
 namespace pza {
-    class meter : public interface
+    class meter : public itface
     {
     public:
         meter(device *device, const std::string &name);

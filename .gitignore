@@ -4,3 +4,4 @@ examples/CMakeUserPresets.json
 CMakeUserPresets.json
 .vscode
 Testing
+conan_imports_manifest.txt

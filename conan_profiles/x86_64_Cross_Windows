@@ -1,18 +1,17 @@
-$toolchain=/usr/x86_64-w64-mingw32 # Adjust this path
 target_host=x86_64-w64-mingw32
-cc_compiler=gcc
-cxx_compiler=g++
 
 [env]
-CONAN_CMAKE_FIND_ROOT_PATH=$toolchain
 CHOST=$target_host
 AR=$target_host-ar
 AS=$target_host-as
 RANLIB=$target_host-ranlib
-CC=$target_host-$cc_compiler
-CXX=$target_host-$cxx_compiler
+CC=$target_host-gcc
+CXX=$target_host-g++
 STRIP=$target_host-strip
 RC=$target_host-windres
+
+[conf]
+tools.build:compiler_executables={"cpp": "$target_host-g++", "c": "$target_host-gcc"}
 
 # We are cross building to Windows
 [settings]

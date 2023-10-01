@@ -4,7 +4,7 @@
 
 using namespace pza;
 
-interface::interface(device *device, const std::string &name)
+itface::itface(device *device, const std::string &name)
     : _device(device),
     _name(name)
 {
@@ -12,7 +12,7 @@ interface::interface(device *device, const std::string &name)
     _topic_cmd = _topic_base + "/cmds/set";
 }
 
-void interface::register_attribute(attribute &attribute)
+void itface::register_attribute(attribute &attribute)
 {
     std::condition_variable cv;
     std::unique_lock<std::mutex> lock(_mtx);
@@ -38,7 +38,7 @@ void interface::register_attribute(attribute &attribute)
     }
 }
 
-void interface::register_attributes(const std::vector<attribute*> &list)
+void itface::register_attributes(const std::vector<attribute*> &list)
 {
     for (auto const &it : list) {
         register_attribute(*it);

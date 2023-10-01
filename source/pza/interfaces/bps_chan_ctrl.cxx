@@ -5,7 +5,7 @@
 using namespace pza;
 
 bps_chan_ctrl::bps_chan_ctrl(device *device, const std::string &name)
-    : interface(device, name),
+    : itface(device, name),
     _volts("volts"),
     _amps("amps"),
     _enable("enable")

@@ -36,10 +36,12 @@ int main(void)
 
         //bps_channel->voltmeter.set_measure_polling_cycle(2);
         //bps_channel->ampermeter.set_measure_polling_cycle(2);
-        bps_channel->ctrl.set_enable_polling_cycle(2);
+        //bps_channel->ctrl.set_enable_polling_cycle(2);
     }
 
     spdlog::info("\n\nOK\n\n");
+
+    cli->disconnect();
 
     return 0;
 }

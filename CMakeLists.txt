@@ -14,18 +14,25 @@ set(SPDLOG_FMT_EXTERNAL 1)
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
-find_package(GTest REQUIRED)
-find_package(cppcheck REQUIRED)
 find_package(magic_enum REQUIRED)
 
-if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT BUILD_SHARED_LIBS)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-allow-multiple-definition")
-endif()
-if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-    set(CMAKE_CROSSCOMPILING_EMULATOR "wine")
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    find_package(GTest REQUIRED)
+    find_package(cppcheck REQUIRED)
 endif()
 
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--allow-multiple-definition")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--allow-multiple-definition")
+elseif (CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT BUILD_SHARED_LIBS)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--allow-multiple-definition")
+endif()
+
+if (CMAKE_SYSTEM_NAME MATCHES "Windows" AND NOT BUILD_SHARED_LIBS)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 add_library(${LIBRARY_NAME})
@@ -44,12 +51,20 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 )
 
 target_link_libraries(${LIBRARY_NAME}
-  $<$<OR:$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>,$<STREQUAL:${CMAKE_SYSTEM_NAME},Windows>>:PahoMqttCpp::paho-mqttpp3-static>
-  $<$<AND:$<BOOL:${BUILD_SHARED_LIBS}>,$<NOT:$<STREQUAL:${CMAKE_SYSTEM_NAME},Windows>>>:PahoMqttCpp::paho-mqttpp3>
+  $<$<BOOL:${BUILD_SHARED_LIBS}>:PahoMqttCpp::paho-mqttpp3>
+  $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:PahoMqttCpp::paho-mqttpp3-static>
   spdlog::spdlog
   nlohmann_json::nlohmann_json
   magic_enum::magic_enum
 )
+
+if (CMAKE_SYSTEM_NAME MATCHES "Windows" AND BUILD_SHARED_LIBS)
+    add_custom_command(TARGET ${LIBRARY_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_BINARY_DIR}/bin/*.dll
+        $<TARGET_FILE_DIR:${LIBRARY_NAME}>
+    )
+endif()
 
 set_target_properties(${LIBRARY_NAME} PROPERTIES
     VERSION ${PROJECT_VERSION}

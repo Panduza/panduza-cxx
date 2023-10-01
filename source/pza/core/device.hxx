@@ -19,7 +19,7 @@ namespace pza
 	    using ptr = std::shared_ptr<device>;
         
         friend class client;
-        friend class interface;
+        friend class itface;
 
         enum class state : unsigned int
         {
@@ -37,7 +37,7 @@ namespace pza
 
         void reset();
         enum state get_state() { return _state; }
-        void register_interface(interface &interface);
+        void register_interface(itface &itface);
 
     protected:
 	    device(const std::string &group, const std::string &name);
@@ -58,7 +58,7 @@ namespace pza
         std::string _base_topic;
         std::string _device_topic;
 
-        std::map<std::string, interface*> _interfaces;
+        std::map<std::string, itface*> _interfaces;
 
         enum state _state = state::orphan;
     };

@@ -25,7 +25,7 @@ namespace pza
         using ptr = std::shared_ptr<client>;
 
         friend class device;
-        friend class interface;
+        friend class itface;
 
         explicit client(const std::string &addr, int port, const std::string &id = "");
 
