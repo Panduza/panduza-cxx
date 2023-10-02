@@ -62,11 +62,6 @@ fi
 
 if [ "$LIB_MODE" == "Static" ]; then
     BUILD_DIR="${BUILD_DIR}_static"
-elif [ "$LIB_MODE" == "Shared" ]; then
-	pass
-else
-	echo "Library mode not supported: $LIB_MODE"
-	exit 1
 fi
 
 FULL_BUILD_DIR="$PROJECT_ROOT_DIR/$BUILD_DIR"
@@ -78,12 +73,13 @@ echo "  Target     : $TARGET"
 echo "  Lib Mode   : $LIB_MODE"
 echo "  Build Mode : $BUILD_MODE"
 
-if [ ! -d "$FULL_BUILD_DIR" ]; then
-	echo "Build directory not found: $FULL_BUILD_DIR"
-	echo "Please run install_dependencies.sh first"
-	exit 1
-fi
-
+mkdir -p $FULL_BUILD_DIR
 cd $FULL_BUILD_DIR
-cmake -DCMAKE_TOOLCHAIN_FILE=./$BUILD_MODE/generators/pzacxx_toolchain.cmake -DCMAKE_BUILD_TYPE=$BUILD_MODE ..
-cmake --build . --config $BUILD_MODE --parallel ${nproc}
+conan install \
+    -s build_type=$BUILD_MODE \
+    -o shared=$( [ "$LIB_MODE" == "Shared" ] && echo "True" || echo "False" ) \
+    --build=missing \
+    --profile:b $FULL_PROFILE_BUILD \
+    --profile:h $FULL_PROFILE_HOST \
+    --install-folder=$FULL_BUILD_DIR \
+    $PROJECT_ROOT_DIR
