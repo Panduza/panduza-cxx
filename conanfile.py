@@ -12,7 +12,7 @@ class PzaCxx(ConanFile):
     }
     default_options = {
         "shared": True,
-        "build_examples": False
+        "build_examples": True
     }
     generators = "CMakeDeps", "CMakeToolchain", "virtualrunenv"
     exports_sources = "CMakeLists.txt", "source/*", "version.h.in", "CHANGELOG.md", "test/*", "cmake/*", "examples/*", "LICENSE"
