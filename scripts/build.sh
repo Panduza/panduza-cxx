@@ -67,9 +67,7 @@ fi
 
 if [ "$LIB_MODE" == "Static" ]; then
     BUILD_DIR="${BUILD_DIR}_static"
-elif [ "$LIB_MODE" == "Shared" ]; then
-	continue
-else
+elif [ "$LIB_MODE" != "Shared" ]; then
 	echo "Library mode not supported: $LIB_MODE"
 	exit 1
 fi

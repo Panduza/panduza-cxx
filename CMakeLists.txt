@@ -59,9 +59,10 @@ target_link_libraries(${LIBRARY_NAME}
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows" AND BUILD_SHARED_LIBS)
+    message(STATUS "Copying DLLs from ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin to ${CMAKE_BINARY_DIR}/bin")
     add_custom_command(TARGET ${LIBRARY_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_BINARY_DIR}/bin/*.dll
+        ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin/*.dll
         $<TARGET_FILE_DIR:${LIBRARY_NAME}>
     )
 endif()
