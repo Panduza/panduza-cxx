@@ -223,9 +223,6 @@ int client::scan_devices(void)
             return;
         }
         _scan_device_count_expected += val;
-
-        // @TODO Dirty hack because platform does not implement device interface for the "platform" YET
-        _scan_device_count_expected -= 1;
     });
 
     // Request scan for platforms and just wait for answers
