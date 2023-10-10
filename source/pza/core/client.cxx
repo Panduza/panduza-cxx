@@ -248,7 +248,7 @@ int client::scan_devices(void)
     ret = cv.wait_for(lock, std::chrono::seconds(_scan_timeout), [&](void) {
         return (_scan_device_count_expected && (_scan_device_count_expected == _scan_device_results.size()));
     });
-    _unsubscribe("pza/server/+/+/atts/info");
+    _unsubscribe("pza/+/+/device/atts/info");
 
     // Process timeout error
     if (ret == false) {
@@ -280,9 +280,6 @@ int client::_scan_interfaces(std::unique_lock<std::mutex> &lock, const device::p
         spdlog::error("Unknown number of interfaces for device {}", device->_get_base_topic());
         return -1;
     }
-
-    // @TODO Dirty hack because the platform count the "device" as an interface but the scan mecanism exclude it
-    _scan_itf_count_expected -= 1;
 
     _scan_itf_results.clear();
 
