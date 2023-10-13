@@ -41,10 +41,10 @@ int device::_set_identity(const std::string &payload)
     // Convert to lowercase
     std::transform(family.begin(), family.end(), family.begin(), ::tolower);
 
-    if (family != get_family()) {
-        spdlog::error("Device is not compatible {} != {}", family, get_family());
-        return -1;
-    }
+    // if (family != get_family()) {
+    //     spdlog::error("Device is not compatible {} != {}", family, get_family());
+    //     return -1;
+    // }
 
     return 0;
 }

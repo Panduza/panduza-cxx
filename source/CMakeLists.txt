@@ -18,6 +18,7 @@ target_sources(${LIBRARY_NAME}
     pza/utils/topic.cxx
 
     pza/devices/bps.cxx
+    pza/devices/orphan.cxx
 
     pza/interfaces/meter.cxx
     pza/interfaces/bps_chan_ctrl.cxx
