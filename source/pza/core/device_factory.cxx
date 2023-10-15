@@ -2,14 +2,17 @@
 
 using namespace pza;
 
-std::map<std::string, device_factory::factory_function> device_factory::_factory_map = {
-    { "bps", device_factory::allocate_device<bps> }
-};
 
 device::ptr device_factory::create_device(const std::string &family, const std::string &group, const std::string &name)
 {
-    auto it = _factory_map.find(family);
-    if (it == _factory_map.end()) {
+    static std::map<std::string, device_factory::factory_function> factory_map = {
+        { "bps", device_factory::allocate_device<bps> }
+    };
+    std::string family_lower = family;
+
+    std::transform(family_lower.begin(), family_lower.end(), family_lower.begin(), ::tolower);
+    auto it = factory_map.find(family_lower);
+    if (it == factory_map.end()) {
         spdlog::error("Unknown device type {}", family);
         return nullptr;
     }

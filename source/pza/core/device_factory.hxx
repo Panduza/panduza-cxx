@@ -25,6 +25,5 @@ namespace pza
 
     private:
         using factory_function = std::function<device::ptr(const std::string &group, const std::string &name)>;
-        static std::map<std::string, factory_function> _factory_map;
     };
 };
