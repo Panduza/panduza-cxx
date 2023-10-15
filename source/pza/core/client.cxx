@@ -43,7 +43,7 @@ int client::connect(void)
         spdlog::error("failed to connect to client: {}", exc.what());
         return -1;
     }
-    ret = scan_devices();
+    ret = scan();
     if (ret == 0)
         spdlog::info("connected to {}", _addr);
     else {
@@ -71,6 +71,15 @@ int client::disconnect(void)
 void client::connection_lost(const std::string &cause)
 {
     spdlog::error("connection lost: {}", cause);
+}
+
+int client::scan()
+{
+    if (_scan_platforms() == -1)
+        return -1;
+    if (_scan_devices() == -1)
+        return -1;
+    return 0;
 }
 
 int client::_publish(const std::string &topic, const std::string &payload)
@@ -177,43 +186,39 @@ void client::message_arrived(mqtt::const_message_ptr msg)
 }
 
 // ============================================================================
-// 
-int client::scan_devices(void)
+//
+int client::_scan_platforms(void)
 {
     bool ret;
     std::condition_variable cv;
     std::unique_lock<std::mutex> lock(_mtx);
-
-    // Check client connection
-    if (is_connected() == false) {
-        spdlog::error("scan failed. Not connected to {}", _addr);
-        return -1;
-    }
 
     // Reset result variables
     _scan_device_count_expected = 0;
     _scan_device_results.clear();
 
     // Log
-    spdlog::debug("scanning for devices on {}...", _addr);
-
-    // STEP 1 : Scan platforms
+    spdlog::debug("scanning for platforms on {}...", _addr);
 
     // Prepare platform scan message processing
-    _subscribe("pza/+/+/+/atts/info", [&](const mqtt::const_message_ptr &msg) {
+    _subscribe("pza/server/+/+/atts/info", [&](const mqtt::const_message_ptr &msg) {
         // Prepare data
         std::string payload = msg->get_payload_str();
         std::string topic = msg->get_topic();
         std::string type;
         unsigned int val;
-        spdlog::debug("received platform info: {}", payload);
 
         // Exclude other messages than platform
         if (pza::json::get_string(payload, "info", "type", type) == -1) {
             spdlog::error("failed to parse type info: {}", payload);
             return;
         }
-        if (type != "platform") return;
+
+        // ignore machinese
+        if (type != "platform")
+            return;
+
+        spdlog::debug("received platform info: {}", payload);
 
         // @TODO HERE we should also check that we did not get the same platform twice (in the case 2 scan is performed the same time)
 
@@ -223,14 +228,33 @@ int client::scan_devices(void)
             return;
         }
         _scan_device_count_expected += val;
+        cv.notify_all();
     });
 
     // Request scan for platforms and just wait for answers
     _publish("pza", "p");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    _unsubscribe("pza/+/+/+/atts/info");
+    ret = cv.wait_for(lock, std::chrono::seconds(_scan_timeout), [&](void) {
+        return (_scan_device_count_expected);
+    });
+    _unsubscribe("pza/server/+/+/atts/info");
 
-    // STEP 2 : Scan devices
+    if (ret == false) {
+        spdlog::error("Platform scan timed out");
+        return -1;
+    }
+    return 0;
+}
+
+// ============================================================================
+// 
+int client::_scan_devices(void)
+{
+    bool ret;
+    std::condition_variable cv;
+    std::unique_lock<std::mutex> lock(_mtx);
+
+    // Log
+    spdlog::debug("scanning for devices on {}...", _addr);
 
     // Prepare device scan message processing
     _subscribe("pza/+/+/device/atts/info", [&](const mqtt::const_message_ptr &msg) {
@@ -249,7 +273,7 @@ int client::scan_devices(void)
 
     // Process timeout error
     if (ret == false) {
-        spdlog::error("timed out waiting for scan results");
+        spdlog::error("Device scan timed out");
         spdlog::debug("Expected {} devices, got {}", _scan_device_count_expected, _scan_device_results.size());
         return -1;
     }
@@ -310,7 +334,6 @@ int client::_scan_interfaces(std::unique_lock<std::mutex> &lock, const device::p
             spdlog::trace("interface: {}", it.first);
         }
     }
-
     return 0;
 }
 
