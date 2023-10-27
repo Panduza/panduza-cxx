@@ -19,6 +19,7 @@ void device::reset()
     _manufacturer = "";
 }
 
+
 int device::_set_identity(const std::string &payload)
 {
     std::string family;

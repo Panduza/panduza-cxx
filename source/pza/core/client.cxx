@@ -359,6 +359,8 @@ device::ptr client::create_device(const std::string &topic_str)
         return nullptr;
     }
 
+    _unsubscribe(topic_str + "/device/atts/identity");
+
     if (json::get_string(identify_msg->get_payload_str(), "identity", "family", family) == -1) {
         spdlog::error("Failed to get family from device");
         return nullptr;
