@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE_NAME="pzacx-build-img"
+IMAGE_NAME="pzacxx-build-img"
 PROJECT_ROOT_DIR="$(dirname "$(realpath "$0")")/.."
 
 TEMP=$(getopt -o u:p:h --long username:,password:,help -n "$0" -- "$@")
@@ -54,5 +54,5 @@ fi
 
 docker login ghcr.io -u $USERNAME -p $PASSWORD || exit 1
 docker build -t $IMAGE_NAME $PROJECT_ROOT_DIR/docker || exit 1
-docker tag $IMAGE_NAME:latest ghcr.io/panduza/$IMAGE_NAME:latest || exit 1
+docker tag $IMAGE_NAME ghcr.io/panduza/$IMAGE_NAME:latest
 docker push ghcr.io/panduza/$IMAGE_NAME:latest

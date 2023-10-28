@@ -1,0 +1,90 @@
+name: CI Workflow
+
+on: [push, pull_request]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/panduza/pzacxx-build-img:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Format
+        run: |
+          ./scripts/format.sh --check
+
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/panduza/pzacxx-build-img:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux, windows]
+        compiler: [gcc, clang]
+        build_type: [debug, release]
+        lib_type: [shared, static]
+        exclude:
+          - os: windows
+            compiler: clang
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - if: ${{ env.ACT }}
+      name: Hack container for local development
+      run: pacman -S --noconfirm nodejs
+
+    - name: "cache"
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan2/p
+        key: conan-cache-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ matrix.lib_type }}
+
+    - id: build_type
+      uses: ASzc/change-string-case-action@v6
+      with:
+        string: ${{ matrix.build_type }}
+
+    - name: "Install dependencies"
+      run: |
+        if [ "${{ matrix.lib_type }}" = "static" ]; then
+          shared="False"
+        else
+          shared="True"
+        fi
+        conan install -pr:b ./conan_profiles/linux_gcc -pr:h ./conan_profiles/${{ matrix.os }}_${{ matrix.compiler }} --build=missing -s build_type=${{ steps.build_type.outputs.capitalized }} -o shared=$shared .
+
+    - name: "Build for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+      run: |
+        if [ "${{ matrix.compiler }}" = "clang" ] && [ "${{ matrix.build_type }}" = "debug" ] && [ "${{ matrix.lib_type }}" = "shared" ]; then
+          tidy="True"
+        else
+          tidy="False"
+        fi
+        if [ "${{ matrix.os }}" = "windows" ]; then
+          cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} -DWITH_TIDY=$tidy -DWITH_TESTS=False
+        else
+          cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} -DWITH_TIDY=$tidy -DWITH_TESTS=True -DWITH_COVERAGE=True
+        fi
+        cmake --build --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}
+
+    - name: "Test for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+      if: ${{ matrix.os == 'Linux' }}
+      run: |
+        ctest --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}
+
+
+    - name: "Coverage"
+      if: ${{ matrix.os == 'linux' && matrix.compiler == 'clang' && matrix.lib_type == 'shared' && matrix.build_type == 'debug' }}
+      run: |
+        grcov . -s ./ -t html --llvm -o ./build/coverage/ --binary-path ./build/${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} --ignore '*test*' --ignore '*examples*' --ignore '*include*' --llvm-path=/usr/bin
+
+    - name: "Upload coverage artifact"
+      if: ${{ matrix.os == 'linux' && matrix.compiler == 'clang' && matrix.lib_type == 'shared' && matrix.build_type == 'debug' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: ./build/coverage/

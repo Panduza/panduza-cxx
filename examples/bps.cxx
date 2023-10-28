@@ -1,40 +1,63 @@
 #include <pza/core/client.hxx>
-#include <pza/devices/bps.hxx>
+#include <pza/core/core.hxx>
+#include <pza/interfaces/ammeter.hxx>
+#include <pza/interfaces/bpc.hxx>
+#include <pza/interfaces/voltmeter.hxx>
 
-int main(int argc, char** argv)
+static const std::string addr = "localhost";
+static const unsigned int port = 1883;
+
+int main()
 {
-    if (argc != 5) {
-        std::cerr << "Usage: " << argv[0] << " <address> <port> <group> <BPS name>" << std::endl;
-        return -1;
-    }
+	pza::core::set_log_level(pza::core::log_level::debug);
 
-    const char *address = argv[1];
-    int port = std::stoi(argv[2]);
-    const char *group = argv[3];
-    const char *bps_name = argv[4];
+	pza::core::get_log_level();
 
-    pza::core::set_log_level(pza::core::log_level::debug);
+	pza::client::s_ptr cli = std::make_shared<pza::client>(addr, port);
 
-    pza::client::ptr cli = std::make_shared<pza::client>(address, port);
+	if (cli->connect() < 0)
+		return -1;
 
-    if (cli->connect() == -1)
-        return -1;
+	if (cli->register_devices() < 0)
+		return -1;
 
-    pza::bps::ptr bps = std::make_shared<pza::bps>(group, bps_name);
+	for (auto &dev : cli->get_devices())
+		spdlog::info("device: {}", dev->get_name());
 
-    if (cli->register_device(bps) == -1)
-        return -1;
+	auto bps = cli->get_device("default", "Panduza_FakeBps");
 
-    for (size_t i = 0; i < bps->get_num_channels(); i++) {
-        auto bps_channel = bps->channel[i];
-        spdlog::info("Channel {}:", i);
-        bps_channel->ctrl.set_voltage(-7.3);
-        bps_channel->ctrl.set_current(1.0);
-        bps_channel->ctrl.set_enable(false);
-        spdlog::info("  Voltage: {}", bps_channel->voltmeter.get_measure());
-        spdlog::info("  Current: {}", bps_channel->ampermeter.get_measure());
-        spdlog::info("  Enabled: {}", bps_channel->ctrl.get_enable());
-    }
+	for (auto itf : bps->get_interfaces())
+		spdlog::info("interface: {}", itf->get_name());
 
-    return cli->disconnect();
+	auto vm = cli->get_interface<pza::itf::voltmeter>("default", "Panduza_FakeBps", "channel", 0, "vm");
+	if (!vm) {
+		spdlog::error("voltmeter not found");
+		return -1;
+	}
+
+	auto ctrl = cli->get_interface<pza::itf::bpc>("default", "Panduza_FakeBps", "channel", 0, "ctrl");
+	if (!ctrl) {
+		spdlog::error("ctrl not found");
+		return -1;
+	}
+
+	auto am = cli->get_interface<pza::itf::ammeter>("default", "Panduza_FakeBps", "channel", 0, "am");
+	if (!am) {
+		spdlog::error("ammeter not found");
+		return -1;
+	}
+
+	ctrl->set_enable(true);
+	ctrl->set_voltage(3.3);
+	ctrl->set_current(0.1);
+
+	vm->register_measure_callback([&]() { spdlog::info("voltage: {}", vm->get_measure()); });
+
+	am->register_measure_callback([&]() { spdlog::info("current: {}", am->get_measure()); });
+
+	cli->disconnect();
+
+	// while (true)
+	//	;
+	return 0;
 }
