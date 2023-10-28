@@ -1,17 +1,14 @@
-target_host=x86_64-w64-mingw32
+{% set target_host = "x86_64-w64-mingw32" %}
 
-[env]
-CHOST=$target_host
-AR=$target_host-ar
-AS=$target_host-as
-RANLIB=$target_host-ranlib
-CC=$target_host-gcc
-CXX=$target_host-g++
-STRIP=$target_host-strip
-RC=$target_host-windres
-
-[conf]
-tools.build:compiler_executables={"cpp": "$target_host-g++", "c": "$target_host-gcc"}
+[buildenv]
+CHOST={{ target_host }}
+AR='{{ target_host + "-ar" }}'
+AS={{ target_host + "-as" }}
+RANLIB={{ target_host + "-ranlib" }}
+CC={{ target_host + "-gcc-posix" }}
+CXX={{ target_host + "-g++-posix" }}
+STRIP={{ target_host + "-strip" }}
+RC={{ target_host + "-windres" }}
 
 # We are cross building to Windows
 [settings]

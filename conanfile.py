@@ -1,4 +1,9 @@
-from conans import ConanFile
+from conan import ConanFile
+from conan.tools.files import save, load
+from conan.tools.gnu import AutotoolsToolchain, AutotoolsDeps
+from conan.tools.microsoft import unix_path, VCVars, is_msvc
+from conan.errors import ConanInvalidConfiguration
+from conan.errors import ConanException
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 import os
 import re
@@ -14,16 +19,14 @@ class PzaCxx(ConanFile):
         "shared": True,
         "build_examples": True
     }
-    generators = "CMakeDeps", "CMakeToolchain", "virtualrunenv"
-    exports_sources = "CMakeLists.txt", "source/*", "version.h.in", "CHANGELOG.md", "test/*", "cmake/*", "examples/*", "LICENSE"
 
     def requirements(self):
         self.requires("paho-mqtt-cpp/[>=1.2.0]")
-        self.requires("spdlog/[>=1.11.0]")
+        self.requires("spdlog/[>=1.12.0]")
         self.requires("nlohmann_json/[>=3.11.2]")
         if self.settings.os == "Linux":
-            self.requires("gtest/cci.20210126")
-            self.requires("cppcheck/[>=2.10]")
+            self.requires("gtest/[>=1.14.0]")
+            self.requires("cppcheck/[>=2.12.1]")
 
     def layout(self):
         cmake_layout(self, build_folder=os.getcwd())
