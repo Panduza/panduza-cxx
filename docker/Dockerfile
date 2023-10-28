@@ -15,7 +15,7 @@ RUN pacman -Sy --noconfirm \
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install conan==1.60
+RUN pip install conan==2.0.13
 RUN conan profile new default --detect
 RUN conan profile update settings.compiler.libcxx=libstdc++11 default
 
