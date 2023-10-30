@@ -81,5 +81,4 @@ conan install \
     --build=missing \
     --profile:b $FULL_PROFILE_BUILD \
     --profile:h $FULL_PROFILE_HOST \
-    --install-folder=$FULL_BUILD_DIR \
     $PROJECT_ROOT_DIR
