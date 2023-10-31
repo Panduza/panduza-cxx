@@ -6,10 +6,11 @@ User library to develop C++ applications following Panduza API.
 
 ### Build Deps
 
-| Package | Version |
-| ------- | ------- |
-| conan   | 1.58    |
-| cmake   | 3.25.0  |
+| Package | Version  |
+| ------- | -------- |
+| GCC     | 13       |
+| conan   | 1.60     |
+| cmake   | >=3.25.0 |
 
 Library dependencies are managed wih Conan.
 
@@ -25,45 +26,26 @@ To install conan, https://conan.io/downloads.html.
 | Google test   | cci.20210126 |          |
 | cppcheck      | 2.10         |          |
 
-## Version
-
-The version of the library is fetched from the top line of CHANGELOG.md.
-
 ## Build
 
-To build the library in Debug or Release mode:
-
 ```
-mkdir build
-cd build
-conan install .. --build=missing -s build_type=<build mode>
-cmake -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=<build mode> -DCMAKE_TOOLCHAIN_FILE=./<build mode>/generators/conan_toolchain.cmake ..
-cmake --build .
-cmake --install .
+./scripts/install_dependencies.sh
+./scripts/build.sh
 ```
 
-To build and export the library as a conan package:
-
 ```
-mkdir build
-cd build
-conan create .. --build=missing -s build_type=<build mode>
+$ ./scripts/install_dependencies.sh --help
+Usage: ./scripts/install_dependencies.sh [-t <target>] [-l <lib>] [-b <build>] [-h]
+  -t  --target   Target platform (Windows or Linux). Default is Linux
+  -l  --lib      Library mode (Static or Shared). Default is Shared
+  -b  --build    Build mode (Debug or Release). Default is Debug
+  -h  --help     Display this help message
 ```
-
-## Test
-
-After building the library, you can test it with:
-
 ```
-cd build
-make test
-```
-
-## Check
-
-You can use cppcheck to examine the code.
-
-```
-cd build
-make check
+$ ./scripts/build.sh --help
+Usage: ./scripts/build.sh [-t <target>] [-l <lib>] [-b <build>] [-h]
+  -t  --target   Target platform (Windows or Linux). Default is Linux
+  -l  --lib      Library mode (Static or Shared). Default is Shared
+  -b  --build    Build mode (Debug or Release). Default is Debug
+  -h  --help     Display this help message
 ```
