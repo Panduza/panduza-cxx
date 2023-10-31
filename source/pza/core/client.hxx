@@ -31,7 +31,7 @@ namespace pza
 
         int connect(void);
         int disconnect(void);
-        int scan_devices(void);
+        int scan(void);
         bool is_connected(void) const { return (_paho_client->is_connected()); }
 
         void set_scan_timeout(unsigned int timeout) { _scan_timeout = timeout; }
@@ -82,7 +82,9 @@ namespace pza
         std::string _convertPattern(const std::string &fnmatchPattern);
         bool _topic_matches(const std::string &str, const std::string &fnmatchPattern);
         void _count_devices_to_scan(const std::string &payload);
-	    int _scan_interfaces(std::unique_lock<std::mutex> &lock, const device::ptr &device);
+        int _scan_platforms();
+        int _scan_devices();
+        int _scan_interfaces(std::unique_lock<std::mutex> &lock, const device::ptr &device);
         device::ptr create_device(const std::string &topic);
     };
 };

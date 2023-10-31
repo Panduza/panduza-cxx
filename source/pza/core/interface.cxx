@@ -30,7 +30,7 @@ void itface::register_attribute(attribute &attribute)
     });
 
     if (cv.wait_for(lock, std::chrono::seconds(5), [&]() { return received; }) == false) {
-        spdlog::error("timed out waiting for attribute registration");
+        spdlog::error("timed out waiting for attribute registration ({})", topic);
     }
     _device->get_client()->_unsubscribe(topic);
     if (received) {

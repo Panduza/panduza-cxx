@@ -28,8 +28,8 @@ namespace pza
         void remove_enable_callback(const std::function<void(bool)> &callback);
 
     private:
-        attribute _volts;
-        attribute _amps;
+        attribute _att_voltage;
+        attribute _att_current;
         attribute _enable;
     };
 };

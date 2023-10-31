@@ -42,7 +42,7 @@ namespace pza
 
             channels.reserve(chan_id + 1);
             for (int i = 0; i < chan_id + 1; i++) {
-                channels.push_back(std::make_shared<T>(device, ":" + name + "_" + std::to_string(i) + ":"));
+                channels.push_back(std::make_shared<T>(device, ":" + name + "_" + std::to_string(i) + ":_"));
             }
 
             return ret;
