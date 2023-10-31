@@ -1,0 +1,22 @@
+target_host=x86_64-w64-mingw32
+
+[env]
+CHOST=$target_host
+AR=$target_host-ar
+AS=$target_host-as
+RANLIB=$target_host-ranlib
+CC=$target_host-gcc
+CXX=$target_host-g++
+STRIP=$target_host-strip
+RC=$target_host-windres
+
+[conf]
+tools.build:compiler_executables={"cpp": "$target_host-g++", "c": "$target_host-gcc"}
+
+# We are cross building to Windows
+[settings]
+os=Windows
+arch=x86_64
+compiler=gcc
+compiler.version=13
+compiler.libcxx=libstdc++11
