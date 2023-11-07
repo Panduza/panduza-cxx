@@ -14,7 +14,6 @@ set(SPDLOG_FMT_EXTERNAL 1)
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
-find_package(magic_enum REQUIRED)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_package(GTest REQUIRED)
@@ -55,7 +54,6 @@ target_link_libraries(${LIBRARY_NAME}
   $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:PahoMqttCpp::paho-mqttpp3-static>
   spdlog::spdlog
   nlohmann_json::nlohmann_json
-  magic_enum::magic_enum
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows" AND BUILD_SHARED_LIBS)

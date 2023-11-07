@@ -1,7 +1,5 @@
 #pragma once
 
-#include <magic_enum.hpp>
-
 #include <pza/core/device.hxx>
 #include <pza/devices/bps.hxx>
 

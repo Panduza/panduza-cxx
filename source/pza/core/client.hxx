@@ -10,8 +10,6 @@
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
-#include <magic_enum.hpp>
-
 #include <pza/core/core.hxx>
 #include <pza/core/device_factory.hxx>
 #include <pza/utils/json.hxx>

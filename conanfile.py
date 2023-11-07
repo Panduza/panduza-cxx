@@ -21,7 +21,6 @@ class PzaCxx(ConanFile):
         self.requires("paho-mqtt-cpp/[>=1.2.0]")
         self.requires("spdlog/[>=1.11.0]")
         self.requires("nlohmann_json/[>=3.11.2]")
-        self.requires("magic_enum/[>=0.9.2]")
         if self.settings.os == "Linux":
             self.requires("gtest/cci.20210126")
             self.requires("cppcheck/[>=2.10]")
