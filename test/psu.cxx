@@ -38,22 +38,22 @@ TEST_F(PsuTest, Enable)
 
 TEST_F(PsuTest, VoltsValue)
 {
-    psu->volts.goal.set(4.2);
+    psu->volts.value.set(4.2);
     EXPECT_EQ(psu->volts.real.get(), 4.2);
-    EXPECT_EQ(psu->volts.goal.get(), 4.2);
+    EXPECT_EQ(psu->volts.value.get(), 4.2);
 
-    psu->volts.goal.set(8);
+    psu->volts.value.set(8);
     EXPECT_EQ(psu->volts.real.get(), 8);
-    EXPECT_EQ(psu->volts.goal.get(), 8);
+    EXPECT_EQ(psu->volts.value.get(), 8);
 }
 
 TEST_F(PsuTest, AmpsValue)
 {
-    psu->amps.goal.set(4.2);
+    psu->amps.value.set(4.2);
     EXPECT_EQ(psu->amps.real.get(), 4.2);
-    EXPECT_EQ(psu->amps.goal.get(), 4.2);
+    EXPECT_EQ(psu->amps.value.get(), 4.2);
 
-    psu->amps.goal.set(8);
+    psu->amps.value.set(8);
     EXPECT_EQ(psu->amps.real.get(), 8);
-    EXPECT_EQ(psu->amps.goal.get(), 8);
+    EXPECT_EQ(psu->amps.value.get(), 8);
 }

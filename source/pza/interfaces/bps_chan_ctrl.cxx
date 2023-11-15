@@ -10,12 +10,12 @@ bps_chan_ctrl::bps_chan_ctrl(device *device, const std::string &name)
     _att_current("current"),
     _enable("enable")
 {
-    _att_voltage.add_rw_field<double>("goal");
+    _att_voltage.add_rw_field<double>("value");
     _att_voltage.add_ro_field<double>("min");
     _att_voltage.add_ro_field<double>("max");
     _att_voltage.add_ro_field<int>("decimals");
 
-    _att_current.add_rw_field<double>("goal");
+    _att_current.add_rw_field<double>("value");
     _att_current.add_ro_field<double>("min");
     _att_current.add_ro_field<double>("max");
     _att_current.add_ro_field<int>("decimals");
@@ -36,7 +36,7 @@ int bps_chan_ctrl::set_voltage(double volts)
         return -1;
     }
 
-    return _att_voltage.get_field<double>("goal").set(volts);
+    return _att_voltage.get_field<double>("value").set(volts);
 }
 
 int bps_chan_ctrl::set_current(double amps)
@@ -49,7 +49,7 @@ int bps_chan_ctrl::set_current(double amps)
         return -1;
     }
 
-    return _att_current.get_field<double>("goal").set(amps);
+    return _att_current.get_field<double>("value").set(amps);
 }
 
 int bps_chan_ctrl::set_enable(bool enable)
