@@ -1,75 +1,92 @@
-#include "device.hxx"
-#include "client.hxx"
+#include <string>
+#include <mutex>
+#include <unordered_map>
 
-device::device(client *cli, const std::string &group, const std::string &name)
+#include <spdlog/spdlog.h>
+
+#include <pza/core/client.hxx>
+#include <pza/core/device.hxx>
+#include <pza/core/interface.hxx>
+
+using namespace pza;
+
+class device_priv
+{
+public:
+    explicit device_priv(client *client, const struct device_info &info);
+
+    const std::string &get_name() const { return _info.name; }
+    const std::string &get_group() const { return _info.group; }
+    const std::string &get_model() const { return _info.model; }
+    const std::string &get_manufacturer() const { return _info.manufacturer; }
+    const std::string &get_family() const { return _info.family; }
+
+    client *get_client() { return _cli; }
+
+    void add_interface(itf::s_ptr itf);
+
+private:
+    client *_cli;
+    struct device_info _info;
+    std::mutex _mtx;
+    std::unordered_map<std::string, itf::s_ptr> _interfaces;
+};
+
+device_priv::device_priv(client *cli, const struct device_info &info)
     : _cli(cli),
-    _name(name),
-    _group(group),
-    _base_topic("pza/" + group + "/" + name),
-    _device_topic(_base_topic + "/device")
+    _info(info)
 {
-    device::ptr dev;
-    itf::ptr itf;
-    scanner &_scanner = _cli->get_scanner();
 
-    if (_scanner.device_was_scanned(group, name) == false)
-        throw std::runtime_error("device was not scanned");
-
-    if (_scanner.scan_device_identity(group, name) < 0)
-        throw std::runtime_error("failed to scan identity for device");
-
-    if (json::get_string(_scanner.get_device_identity(), "identity", "model", _model) < 0)
-        throw std::runtime_error("Device does not have a model");
-
-    if (json::get_string(_scanner.get_device_identity(), "identity", "manufacturer", _manufacturer) < 0)
-        throw std::runtime_error("Device does not have a manufacturer");
-
-    if (json::get_string(_scanner.get_device_identity(), "identity", "family", _family) < 0)
-        throw std::runtime_error("Device does not have a family");
-
-    if (_scanner.scan_interfaces(group, name) < 0)
-        throw std::runtime_error("failed to scan interfaces for device");
-
-    std::transform(_family.begin(), _family.end(), _family.begin(), ::tolower);
-    create_interfaces(_scanner.get_interfaces());
 }
 
-void device::create_interfaces(const scanner::interface_map &interfaces)
+void device_priv::add_interface(itf::s_ptr itf)
 {
-    for (const auto &elem : interfaces) {
-        itf::ptr new_itf = interface_factory::create_interface(this, elem.first, elem.second);
-
-        if (new_itf == nullptr || _register_interface(new_itf) < 0) {
-            spdlog::error("failed to create interface {}", elem.first);
-            continue;
-        }
-    }
+    std::lock_guard<std::mutex> lock(_mtx);
+    _interfaces[itf->get_name()] = itf;
 }
 
-int device::_register_interface(itf::ptr interface)
+device::device(client *cli, const device_info &info, configurator cfg)
+    : _priv(std::make_unique<device_priv>(cli, info))
 {
-    std::condition_variable cv;
-    std::unique_lock<std::mutex> lock(_mtx);
-    bool received = false;
-    bool ret;
+    cfg(this);
+}
 
-    for (auto const &attribute: interface->get_attributes()) {
-        std::string topic;
+device::~device()
+{
 
-        topic = interface->get_topic_base() + "/atts/" + attribute.first;
-        _cli->subscribe(topic, [&](const mqtt::const_message_ptr &msg) {
-            attribute.second->on_message(msg);
-            cv.notify_one();
-            received = true;
-        });
-        ret = cv.wait_for(lock, std::chrono::seconds(_cli->get_scanner().get_scan_timeout()), [&]() { return received; });
-        _cli->unsubscribe(topic);
-        if (ret == false) {
-            spdlog::error("timed out waiting for attribute registration on {}", topic);
-            return -1;
-        }
-        _cli->subscribe(topic, std::bind(&attribute::on_message, attribute.second, std::placeholders::_1));
-    }
-    _interfaces[interface->get_name()] = interface;
-    return 0;
+}
+
+const std::string &device::get_name() const
+{
+    return _priv->get_name();
+}
+
+const std::string &device::get_group() const
+{
+    return _priv->get_group();
+}   
+
+const std::string &device::get_model() const
+{
+    return _priv->get_model();
+}
+
+const std::string &device::get_manufacturer() const
+{
+    return _priv->get_manufacturer();
+}
+
+const std::string &device::get_family() const
+{
+    return _priv->get_family();
+}
+
+client *device::get_client() const
+{
+    return _priv->get_client();
+}
+
+void device::add_interface(itf::s_ptr itf)
+{
+    _priv->add_interface(itf);
 }

@@ -4,17 +4,12 @@
 
 #include <spdlog/spdlog.h>
 
-#include "interface.hxx"
+#include <pza/core/device.hxx>
+#include <pza/core/interface.hxx>
 
 namespace interface_factory
 {
-    using factory_function = std::function<itf::ptr(device *dev, const std::string &name)>;
+    using factory_function = std::function<pza::itf::s_ptr(pza::device *dev, const std::string &name, pza::itf::client_callbacks cb)>;
 
-    itf::ptr create_interface(device *dev, const std::string &name, const std::string &type);
-
-    template <typename T>
-    itf::ptr allocate_interface(device *dev, const std::string &name)
-    {
-        return std::make_shared<T>(dev, name);
-    }
+    pza::itf::s_ptr create_interface(pza::device *dev, const std::string &name, const std::string &type, pza::itf::client_callbacks cb);
 };

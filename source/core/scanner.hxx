@@ -5,11 +5,10 @@
 #include <mutex>
 #include <set>
 
+#include <spdlog/spdlog.h>
 #include <mqtt/client.h>
 
 #include "../utils/json.hxx"
-
-class client;
 
 class scanner
 {
@@ -17,7 +16,13 @@ public:
     using device_map = std::unordered_map<std::string, std::string>;
     using interface_map = std::unordered_map<std::string, std::string>;
 
-    scanner(client *cli);
+    struct client_callbacks {
+        std::function<int(const std::string &, const std::string &)> publish;
+        std::function<int(const std::string &, const std::function<void(mqtt::const_message_ptr)> &)> subscribe;
+        std::function<int(const std::string &)> unsubscribe;
+    };
+
+    scanner(const struct client_callbacks &callbacks);
 
     void set_scan_timeout(int timeout) { _scan_timeout = timeout; }
     int get_scan_timeout(void) const { return _scan_timeout; }
@@ -33,9 +38,9 @@ public:
     std::string get_device_identity() const { return _device_identity; }
 
 private:
-    static constexpr int _scan_timeout_default = 5; // in seconds
+    static constexpr int _scan_timeout_default = 3; // in seconds
 
-    client *_cli;
+    struct client_callbacks _callbacks;
     std::mutex _mtx;
     std::condition_variable _cv;
     int _scan_timeout = _scan_timeout_default;

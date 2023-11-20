@@ -1,19 +1,15 @@
 #include <unistd.h>
 
-#include <core/client.hxx>
-
-#include <interfaces/bps_chan_ctrl.hxx>
-#include <interfaces/meter.hxx>
+#include <pza/core/client.hxx>
+#include <pza/interfaces/meter.hxx>
+#include <pza/interfaces/bps_chan_ctrl.hxx>
 
 int main()
 {
-    core::set_log_level(core::log_level::debug);
-
-    client::ptr cli = std::make_shared<client>("localhost", 1883);
+    pza::client::s_ptr cli = std::make_shared<pza::client>("localhost", 1883);
 
     if (cli->connect() < 0)
         return -1;
 
-    while (1)
-        ;
+    auto dev = cli->register_device("default", "Panduza_FakeBps");
 }

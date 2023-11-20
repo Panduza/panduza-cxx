@@ -1,15 +1,24 @@
 #include "interface_factory.hxx"
 
-#include "interfaces/bps_chan_ctrl.hxx"
-#include "interfaces/meter.hxx"
+#include <pza/core/device.hxx>
+#include <pza/interfaces/bps_chan_ctrl.hxx>
+#include <pza/interfaces/meter.hxx>
 
-static std::map<std::string, interface_factory::factory_function> factory_map = {
-    { "ammeter", interface_factory::allocate_interface<meter> },
-    { "voltmeter", interface_factory::allocate_interface<meter> },
-    { "bpc", interface_factory::allocate_interface<bps_chan_ctrl> }
+using namespace pza;
+
+template <typename T>
+static itf::s_ptr allocate_interface(device *dev, const std::string &name, itf::client_callbacks cb)
+{
+    return std::make_shared<T>(dev, name, cb);
+}
+
+static std::unordered_map<std::string, interface_factory::factory_function> factory_map = {
+    { "ammeter", allocate_interface<meter> },
+    { "voltmeter", allocate_interface<meter> },
+    { "bpc", allocate_interface<bps_chan_ctrl> }
 };
 
-itf::ptr interface_factory::create_interface(device *dev, const std::string &name, const std::string &type)
+itf::s_ptr interface_factory::create_interface(device *dev, const std::string &name, const std::string &type, itf::client_callbacks cb)
 {
     static const std::vector<std::string> exclude = { "platform", "device" };
 
@@ -22,5 +31,5 @@ itf::ptr interface_factory::create_interface(device *dev, const std::string &nam
         spdlog::error("Unknown interface type {}", type);
         return nullptr;
     }
-    return it->second(dev, name);
+    return it->second(dev, name, cb);
 }

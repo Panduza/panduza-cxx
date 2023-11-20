@@ -1,8 +1,7 @@
 #include "scanner.hxx"
-#include "client.hxx"
 
-scanner::scanner(client *cli)
-    : _cli(cli)
+scanner::scanner(const struct client_callbacks &callbacks)
+    : _callbacks(callbacks)
 {
 
 }
@@ -26,12 +25,12 @@ int scanner::_scan_platforms()
     _platforms.clear();
     _device_count = 0;
 
-    _cli->subscribe(topic, std::bind(&scanner::_on_platform_info, this, std::placeholders::_1));
-    _cli->publish("pza", "p");
+    _callbacks.subscribe(topic, std::bind(&scanner::_on_platform_info, this, std::placeholders::_1));
+    _callbacks.publish("pza", "p");
     
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    _cli->unsubscribe(topic);
+    _callbacks.unsubscribe(topic);
 
     if (_platforms.empty()) {
         spdlog::error("No platforms found");
@@ -77,12 +76,12 @@ int scanner::_scan_devices()
     const std::string &topic = "pza/+/+/device/atts/info";
     bool ret;
 
-    _cli->subscribe(topic, std::bind(&scanner::_on_device_info, this, std::placeholders::_1));
-    _cli->publish("pza", "d");
+    _callbacks.subscribe(topic, std::bind(&scanner::_on_device_info, this, std::placeholders::_1));
+    _callbacks.publish("pza", "d");
 
     ret = _cv.wait_for(lock, std::chrono::seconds(_scan_timeout), [&] { return _device_count == _devices.size(); });
 
-    _cli->unsubscribe(topic);
+    _callbacks.unsubscribe(topic);
 
     if (ret == false) {
         spdlog::error("timed out waiting for devices");
@@ -120,14 +119,14 @@ int scanner::scan_interfaces(const std::string &group, const std::string &name)
 
     _interfaces.clear();
 
-    _cli->subscribe(itf_topic, std::bind(&scanner::_on_interface_info, this, std::placeholders::_1));
-    _cli->publish("pza", short_topic);
+    _callbacks.subscribe(itf_topic, std::bind(&scanner::_on_interface_info, this, std::placeholders::_1));
+    _callbacks.publish("pza", short_topic);
 
     ret = _cv.wait_for(lock, std::chrono::seconds(_scan_timeout), [&](void) {
         return (_interface_count && (_interface_count == _interfaces.size()));
     });
 
-    _cli->unsubscribe(itf_topic);
+    _callbacks.unsubscribe(itf_topic);
 
     if (ret == false) {
         spdlog::error("timed out waiting for interfaces");
@@ -154,11 +153,11 @@ int scanner::scan_device_identity(const std::string &group, const std::string &n
     bool ret;
 
     _device_identity = "";
-    _cli->subscribe(topic, std::bind(&scanner::_on_identity_info, this, std::placeholders::_1));
+    _callbacks.subscribe(topic, std::bind(&scanner::_on_identity_info, this, std::placeholders::_1));
 
     ret = _cv.wait_for(lock, std::chrono::seconds(_scan_timeout), [&] { return (_device_identity.empty() == false); });
 
-    _cli->unsubscribe(topic);
+    _callbacks.unsubscribe(topic);
 
     if (ret == false) {
         spdlog::error("timed out waiting for identity message");

@@ -1,76 +1,86 @@
-#include "bps_chan_ctrl.hxx"
+#include <pza/interfaces/bps_chan_ctrl.hxx>
 
-#include <iostream>
+#include "../core/attribute.hxx"
 
-bps_chan_ctrl::bps_chan_ctrl(device *device, const std::string &name)
-    : itf(device, name),
-    _att_voltage("voltage"),
-    _att_current("current"),
-    _enable("enable")
+using namespace pza;
+
+bps_chan_ctrl::bps_chan_ctrl(device *dev, const std::string &name, client_callbacks cb)
+    : itf(dev, name, cb)
 {
-    _att_voltage.add_rw_field<double>("value");
-    _att_voltage.add_ro_field<double>("min");
-    _att_voltage.add_ro_field<double>("max");
-    _att_voltage.add_ro_field<int>("decimals");
+    _att_voltage = new attribute("voltage");
+    _att_current = new attribute("current");
+    _enable = new attribute("enable");
 
-    _att_current.add_rw_field<double>("value");
-    _att_current.add_ro_field<double>("min");
-    _att_current.add_ro_field<double>("max");
-    _att_current.add_ro_field<int>("decimals");
+    _att_voltage->add_rw_field<double>("value");
+    _att_voltage->add_ro_field<double>("min");
+    _att_voltage->add_ro_field<double>("max");
+    _att_voltage->add_ro_field<int>("decimals");
 
-    _enable.add_rw_field<bool>("value");
-    _enable.add_rw_field<int>("polling_cycle");
-    
-    add_attributes({&_att_voltage, &_att_current, &_enable});
+    _att_current->add_rw_field<double>("value");
+    _att_current->add_ro_field<double>("min");
+    _att_current->add_ro_field<double>("max");
+    _att_current->add_ro_field<int>("decimals");
+
+    _enable->add_rw_field<bool>("value");
+    _enable->add_rw_field<int>("polling_cycle");
+
+    add_attributes({_att_voltage, _att_current, _enable});
+}
+
+bps_chan_ctrl::~bps_chan_ctrl()
+{
+    delete _att_voltage;
+    delete _att_current;
+    delete _enable;
 }
 
 int bps_chan_ctrl::set_voltage(double volts)
 {
-    double min = _att_voltage.get_field<double>("min").get();
-    double max = _att_voltage.get_field<double>("max").get();
+    double min = _att_voltage->get_field<double>("min").get();
+    double max = _att_voltage->get_field<double>("max").get();
 
     if (volts < min || volts > max) {
         spdlog::error("You can't set voltage to {}, range is {} to {}", volts, min, max);
         return -1;
     }
 
-    return _att_voltage.get_field<double>("value").set(volts);
+    return _att_voltage->get_field<double>("value").set(volts);
 }
 
 int bps_chan_ctrl::set_current(double amps)
 {
-    double min = _att_current.get_field<double>("min").get();
-    double max = _att_current.get_field<double>("max").get();
+    double min = _att_current->get_field<double>("min").get();
+    double max = _att_current->get_field<double>("max").get();
 
     if (amps < min || amps > max) {
         spdlog::error("You can't set current to {}, range is {} to {}", amps, min, max);
         return -1;
     }
 
-    return _att_current.get_field<double>("value").set(amps);
+    return _att_current->get_field<double>("value").set(amps);
 }
 
 int bps_chan_ctrl::set_enable(bool enable)
 {
-    return _enable.get_field<bool>("value").set(enable);
+    return _enable->get_field<bool>("value").set(enable);
 }
 
 bool bps_chan_ctrl::get_enable()
 {
-    return _enable.get_field<bool>("value").get();
+    return _enable->get_field<bool>("value").get();
 }
 
 int bps_chan_ctrl::set_enable_polling_cycle(double seconds)
 {
-    return _enable.get_field<int>("polling_cycle").set(seconds);
+    return _enable->get_field<int>("polling_cycle").set(seconds);
 }
 
 void bps_chan_ctrl::add_enable_callback(const std::function<void(bool)> &callback)
 {
-    _enable.get_field<bool>("value").add_get_callback(callback);
+    _enable->get_field<bool>("value").add_get_callback(callback);
 }
 
 void bps_chan_ctrl::remove_enable_callback(const std::function<void(bool)> &callback)
 {
-    _enable.get_field<bool>("value").remove_get_callback(callback);
+    _enable->get_field<bool>("value").remove_get_callback(callback);
 }

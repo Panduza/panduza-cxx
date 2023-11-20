@@ -79,4 +79,5 @@ private:
     std::mutex _mtx;
     bool _waiting_for_response = false;
     std::function<void(const nlohmann::json &data)> _callback = nullptr;
+    bool _is_init = false;
 };

@@ -1,10 +1,9 @@
 #include "attribute.hxx"
 
-#include <iostream>
-
 attribute::attribute(const std::string &name)
     : _name(name)
 {
+
 }
 
 void attribute::on_message(const mqtt::const_message_ptr &message)
@@ -41,6 +40,7 @@ void attribute::on_message(const mqtt::const_message_ptr &message)
         _waiting_for_response = false;
         _cv.notify_one();
     }
+    _is_init = true;
 }
 
 bool attribute::type_is_compatible(const nlohmann::json::value_t &value1, const nlohmann::json::value_t &value2)
