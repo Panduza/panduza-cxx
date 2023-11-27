@@ -7,7 +7,7 @@
 
 #include <nlohmann/json.hpp>
 
-class itf_priv;
+class itf_impl;
 class attribute;
 
 namespace pza
@@ -19,12 +19,8 @@ class itf
 {
 public:
     using s_ptr = std::shared_ptr<itf>;
-
-    struct client_callbacks
-    {
-        std::function<void(const std::string &, const std::vector<attribute *> &)> on_new_attributes;
-        std::function<void(const std::string &, const std::string &)> on_new_message;
-    };
+    using u_ptr = std::unique_ptr<itf>;
+    using w_ptr = std::weak_ptr<itf>;
 
     virtual ~itf();
     itf(const itf&) = delete;
@@ -33,13 +29,12 @@ public:
     itf& operator=(itf&&) = delete;
 
     const std::string &get_name() const;
-    device *get_device() const;
 
 protected:
-    explicit itf(device *dev, const std::string &name, client_callbacks cb);
+    explicit itf(device &dev, const std::string &name);
 
     void add_attributes(const std::vector<attribute *> &attributes);
 
-    std::unique_ptr<itf_priv> _priv;
+    std::unique_ptr<itf_impl> _impl;
 };
 };

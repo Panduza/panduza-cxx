@@ -18,7 +18,7 @@ public:
     using u_ptr = std::unique_ptr<bps_chan_ctrl>;
     using w_ptr = std::weak_ptr<bps_chan_ctrl>;
 
-    bps_chan_ctrl(device *dev, const std::string &name, client_callbacks cb);
+    bps_chan_ctrl(device &dev, const std::string &name);
     ~bps_chan_ctrl();
 
     int set_voltage(double volts);

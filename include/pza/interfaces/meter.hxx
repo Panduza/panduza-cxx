@@ -18,7 +18,7 @@ public:
     using u_ptr = std::unique_ptr<meter>;
     using w_ptr = std::weak_ptr<meter>;
     
-    meter(device *dev, const std::string &name, client_callbacks cb);
+    meter(device &dev, const std::string &name);
     ~meter();
 
     double get_measure();

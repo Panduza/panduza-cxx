@@ -1,11 +1,12 @@
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 #include <pza/core/interface.hxx>
 
-class device_priv;
+class device_impl;
+class mqtt_service;
 
 namespace pza
 {
@@ -18,6 +19,7 @@ struct device_info
     std::string model;
     std::string manufacturer;
     std::string family;
+    unsigned int number_of_interfaces;
 };
 
 class device
@@ -27,9 +29,7 @@ public:
     using u_ptr = std::unique_ptr<device>;
     using w_ptr = std::weak_ptr<device>;
 
-    using configurator = std::function<void(device *)>;
-
-    explicit device(pza::client *client, const device_info &inf, configurator cfg);
+    explicit device(mqtt_service &mqtt, const struct device_info &info);
     ~device();
 
     const std::string &get_name() const;
@@ -37,11 +37,8 @@ public:
     const std::string &get_model() const;
     const std::string &get_manufacturer() const;
     const std::string &get_family() const;
-    pza::client *get_client() const;
-
-    void add_interface(itf::s_ptr itf);
 
 private:
-    std::unique_ptr<device_priv> _priv;
+    std::unique_ptr<device_impl> _impl;
 };
 };

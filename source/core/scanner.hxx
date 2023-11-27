@@ -1,62 +1,35 @@
 #pragma once
 
-#include <functional>
-#include <memory>
 #include <mutex>
-#include <set>
+#include <condition_variable>
 
 #include <spdlog/spdlog.h>
-#include <mqtt/client.h>
 
-#include "../utils/json.hxx"
+#include "mqtt_service.hxx"
 
 class scanner
 {
 public:
-    using device_map = std::unordered_map<std::string, std::string>;
-    using interface_map = std::unordered_map<std::string, std::string>;
 
-    struct client_callbacks {
-        std::function<int(const std::string &, const std::string &)> publish;
-        std::function<int(const std::string &, const std::function<void(mqtt::const_message_ptr)> &)> subscribe;
-        std::function<int(const std::string &)> unsubscribe;
-    };
+    explicit scanner(mqtt_service &mqtt);
 
-    scanner(const struct client_callbacks &callbacks);
-
-    void set_scan_timeout(int timeout) { _scan_timeout = timeout; }
-    int get_scan_timeout(void) const { return _scan_timeout; }
-
-    int scan();
-    int scan_interfaces(const std::string &group, const std::string &name);
-    int scan_device_identity(const std::string &group, const std::string &name);
-
-    bool device_was_scanned(const std::string &group, const std::string &name);
-
-    const device_map &get_devices(void) const { return _devices; }
-    const interface_map &get_interfaces(void) const { return _interfaces; }
-    std::string get_device_identity() const { return _device_identity; }
+    scanner &set_scan_timeout(unsigned int timeout) { _scan_timeout = timeout; return *this; }
+    scanner &set_message_callback(const std::function<void(mqtt::const_message_ptr)> &cb) { _message_cb = cb; return *this; }
+    scanner &set_condition_callback(const std::function<bool()> &cb) { _condition_cb = cb; return *this; }
+    scanner &set_subscription_topic(const std::string &topic) { _sub_topic = topic; return *this; }
+    scanner &set_publisher(const mqtt::const_message_ptr msg) { _pub_msg = msg; return *this; }
+    int run();
 
 private:
-    static constexpr int _scan_timeout_default = 3; // in seconds
-
-    struct client_callbacks _callbacks;
-    std::mutex _mtx;
+    static constexpr unsigned int _scan_timeout_default = 3; // in seconds
+    unsigned int _scan_timeout = _scan_timeout_default;
+    mqtt_service &_mqtt;
+    std::function<void(mqtt::const_message_ptr)> _message_cb;
+    std::function<bool()> _condition_cb;
     std::condition_variable _cv;
-    int _scan_timeout = _scan_timeout_default;
+    std::mutex _mtx;
+    std::string _sub_topic;
+    mqtt::const_message_ptr _pub_msg;
 
-    std::set<std::string> _platforms;
-    unsigned int _device_count;
-    device_map _devices;
-    unsigned int _interface_count;
-    interface_map _interfaces;
-    std::string _device_identity;
-
-    int _scan_platforms();
-    int _scan_devices();
-
-    void _on_platform_info(mqtt::const_message_ptr);
-    void _on_device_info(mqtt::const_message_ptr);
-    void _on_interface_info(mqtt::const_message_ptr);
-    void _on_identity_info(mqtt::const_message_ptr);
+    void _on_message(const mqtt::const_message_ptr msg);
 };

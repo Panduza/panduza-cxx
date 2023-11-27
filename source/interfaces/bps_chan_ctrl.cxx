@@ -4,8 +4,8 @@
 
 using namespace pza;
 
-bps_chan_ctrl::bps_chan_ctrl(device *dev, const std::string &name, client_callbacks cb)
-    : itf(dev, name, cb)
+bps_chan_ctrl::bps_chan_ctrl(device &dev, const std::string &name)
+    : itf(dev, name)
 {
     _att_voltage = new attribute("voltage");
     _att_current = new attribute("current");

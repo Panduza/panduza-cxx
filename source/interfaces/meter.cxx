@@ -4,8 +4,8 @@
 
 using namespace pza;
 
-meter::meter(device *dev, const std::string &name, client_callbacks cb)
-    : itf(dev, name, cb)
+meter::meter(device &dev, const std::string &name)
+    : itf(dev, name)
 {
     _measure = new attribute("measure");
 

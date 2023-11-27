@@ -7,9 +7,9 @@
 using namespace pza;
 
 template <typename T>
-static itf::s_ptr allocate_interface(device *dev, const std::string &name, itf::client_callbacks cb)
+static itf::s_ptr allocate_interface(device &dev, const std::string &name)
 {
-    return std::make_shared<T>(dev, name, cb);
+    return std::make_shared<T>(dev, name);
 }
 
 static std::unordered_map<std::string, interface_factory::factory_function> factory_map = {
@@ -18,7 +18,7 @@ static std::unordered_map<std::string, interface_factory::factory_function> fact
     { "bpc", allocate_interface<bps_chan_ctrl> }
 };
 
-itf::s_ptr interface_factory::create_interface(device *dev, const std::string &name, const std::string &type, itf::client_callbacks cb)
+itf::s_ptr interface_factory::create_interface(device &dev, const std::string &name, const std::string &type)
 {
     static const std::vector<std::string> exclude = { "platform", "device" };
 
@@ -31,5 +31,5 @@ itf::s_ptr interface_factory::create_interface(device *dev, const std::string &n
         spdlog::error("Unknown interface type {}", type);
         return nullptr;
     }
-    return it->second(dev, name, cb);
+    return it->second(dev, name);
 }

@@ -9,7 +9,7 @@
 
 namespace interface_factory
 {
-    using factory_function = std::function<pza::itf::s_ptr(pza::device *dev, const std::string &name, pza::itf::client_callbacks cb)>;
+    using factory_function = std::function<pza::itf::s_ptr(pza::device &dev, const std::string &name)>;
 
-    pza::itf::s_ptr create_interface(pza::device *dev, const std::string &name, const std::string &type, pza::itf::client_callbacks cb);
+    pza::itf::s_ptr create_interface(pza::device &dev, const std::string &name, const std::string &type);
 };

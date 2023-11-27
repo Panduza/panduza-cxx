@@ -8,47 +8,76 @@
 #include <pza/core/device.hxx>
 #include <pza/core/interface.hxx>
 
+
+#include "../utils/json.hxx"
+#include "interface_factory.hxx"
+#include "mqtt_service.hxx"
+#include "scanner.hxx"
+
 using namespace pza;
 
-class device_priv
+struct device_impl
 {
-public:
-    explicit device_priv(client *client, const struct device_info &info);
+    explicit device_impl(mqtt_service &mqtt, const struct device_info &info);
 
-    const std::string &get_name() const { return _info.name; }
-    const std::string &get_group() const { return _info.group; }
-    const std::string &get_model() const { return _info.model; }
-    const std::string &get_manufacturer() const { return _info.manufacturer; }
-    const std::string &get_family() const { return _info.family; }
+    const std::string &get_name() const { return info.name; }
+    const std::string &get_group() const { return info.group; }
+    const std::string &get_model() const { return info.model; }
+    const std::string &get_manufacturer() const { return info.manufacturer; }
+    const std::string &get_family() const { return info.family; }
 
-    client *get_client() { return _cli; }
+    void on_interface_info(mqtt::const_message_ptr msg);
 
-    void add_interface(itf::s_ptr itf);
-
-private:
-    client *_cli;
-    struct device_info _info;
-    std::mutex _mtx;
-    std::unordered_map<std::string, itf::s_ptr> _interfaces;
+    struct device_info info;
+    std::unordered_map<std::string, std::string> interfaces_scanned;
+    std::unordered_map<std::string, itf::s_ptr> interfaces;
 };
 
-device_priv::device_priv(client *cli, const struct device_info &info)
-    : _cli(cli),
-    _info(info)
+device_impl::device_impl(mqtt_service &mqtt, const struct device_info &info)
+    : info(info)
 {
+    scanner scanner(mqtt);
 
+    scanner.set_scan_timeout(5)
+        .set_message_callback(std::bind(&device_impl::on_interface_info, this, std::placeholders::_1))
+        .set_condition_callback([&](void) {
+            return (info.number_of_interfaces && (info.number_of_interfaces == interfaces_scanned.size()));
+        })
+        .set_publisher(mqtt::make_message("pza", info.group + "/" + info.name))
+        .set_subscription_topic("pza/" + info.group + "/" + info.name + "/+/atts/info");
+
+    if (scanner.run() < 0)
+        spdlog::error("timed out waiting for interfaces, expected {} got {}", info.number_of_interfaces, interfaces_scanned.size());
 }
 
-void device_priv::add_interface(itf::s_ptr itf)
+void device_impl::on_interface_info(mqtt::const_message_ptr msg)
 {
-    std::lock_guard<std::mutex> lock(_mtx);
-    _interfaces[itf->get_name()] = itf;
+    std::string base_topic = msg->get_topic().substr(0, msg->get_topic().find("/atts/info"));
+    std::string itf_name = base_topic.substr(base_topic.find_last_of('/') + 1);
+
+    spdlog::trace("received interface info: {} {}", msg->get_topic(), msg->get_payload_str());
+
+    interfaces_scanned[itf_name] = msg->get_payload_str();
 }
 
-device::device(client *cli, const device_info &info, configurator cfg)
-    : _priv(std::make_unique<device_priv>(cli, info))
+device::device(mqtt_service &mqtt, const struct device_info &info)
+    : _impl(std::make_unique<device_impl>(mqtt, info))
 {
-    cfg(this);
+    for (auto &itf : _impl->interfaces_scanned) {
+        std::string type;
+
+        if (json::get_string(itf.second, "info", "type", type) < 0) {
+            spdlog::error("failed to get interface type");
+            continue;
+        }
+
+        auto itf_ptr = interface_factory::create_interface(*this, itf.first, type);
+        if (itf_ptr == nullptr) {
+            spdlog::error("failed to create interface {} of type {}", itf.first, type);
+            continue;
+        }
+        _impl->interfaces[itf.first] = itf_ptr;
+    }
 }
 
 device::~device()
@@ -58,35 +87,25 @@ device::~device()
 
 const std::string &device::get_name() const
 {
-    return _priv->get_name();
+    return _impl->get_name();
 }
 
 const std::string &device::get_group() const
 {
-    return _priv->get_group();
+    return _impl->get_group();
 }   
 
 const std::string &device::get_model() const
 {
-    return _priv->get_model();
+    return _impl->get_model();
 }
 
 const std::string &device::get_manufacturer() const
 {
-    return _priv->get_manufacturer();
+    return _impl->get_manufacturer();
 }
 
 const std::string &device::get_family() const
 {
-    return _priv->get_family();
-}
-
-client *device::get_client() const
-{
-    return _priv->get_client();
-}
-
-void device::add_interface(itf::s_ptr itf)
-{
-    _priv->add_interface(itf);
+    return _impl->get_family();
 }

@@ -6,7 +6,7 @@
 
 #include <pza/core/device.hxx>
 
-class client_priv;
+class client_impl;
 
 namespace pza
 {
@@ -31,9 +31,11 @@ public:
     void set_conn_timeout(int timeout);
     int get_conn_timeout(void) const;
 
+    int scan();
+
     device::s_ptr register_device(const std::string &group, const std::string &name);
 
 private:
-    std::unique_ptr<client_priv> _priv;
+    std::unique_ptr<client_impl> _impl;
 };
 };
