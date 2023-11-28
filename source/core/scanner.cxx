@@ -30,7 +30,7 @@ int scanner::run()
     return (ret == true) ? 0 : -1;
 }
 
-void scanner::_on_message(const mqtt::const_message_ptr msg)
+void scanner::_on_message(mqtt::const_message_ptr msg)
 {
     _message_cb(msg);
     _cv.notify_one();

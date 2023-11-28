@@ -27,7 +27,7 @@ public:
         _add_field<T>(name, access_mode::readwrite);
     }
 
-    void on_message(const mqtt::const_message_ptr &message);
+    void on_message(mqtt::const_message_ptr message);
 
     static bool type_is_compatible(const nlohmann::json::value_t &value1, const nlohmann::json::value_t &value2);
 
@@ -79,5 +79,4 @@ private:
     std::mutex _mtx;
     bool _waiting_for_response = false;
     std::function<void(const nlohmann::json &data)> _callback = nullptr;
-    bool _is_init = false;
 };

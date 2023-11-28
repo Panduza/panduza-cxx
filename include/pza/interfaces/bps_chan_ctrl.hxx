@@ -7,18 +7,16 @@
 #include <pza/core/device.hxx>
 #include <pza/core/interface.hxx>
 
-class attribute;
-
-namespace pza
+namespace pza::itf
 {
-class bps_chan_ctrl : public itf
+class bps_chan_ctrl : public itf_base
 {
 public:
     using s_ptr = std::shared_ptr<bps_chan_ctrl>;
     using u_ptr = std::unique_ptr<bps_chan_ctrl>;
     using w_ptr = std::weak_ptr<bps_chan_ctrl>;
 
-    bps_chan_ctrl(device &dev, const std::string &name);
+    bps_chan_ctrl(mqtt_service &mqtt, itf_info &info);
     ~bps_chan_ctrl();
 
     int set_voltage(double volts);
@@ -31,8 +29,8 @@ public:
     void remove_enable_callback(const std::function<void(bool)> &callback);
 
 private:
-    attribute *_att_voltage;
-    attribute *_att_current;
-    attribute *_enable;
+    std::unique_ptr<attribute> _att_voltage;
+    std::unique_ptr<attribute> _att_current;
+    std::unique_ptr<attribute> _enable;
 };
 };

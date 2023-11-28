@@ -30,7 +30,7 @@ struct device_impl
 
     struct device_info info;
     std::unordered_map<std::string, std::string> interfaces_scanned;
-    std::unordered_map<std::string, itf::s_ptr> interfaces;
+    std::unordered_map<std::string, itf_base::s_ptr> interfaces;
 };
 
 device_impl::device_impl(mqtt_service &mqtt, const struct device_info &info)
@@ -71,7 +71,7 @@ device::device(mqtt_service &mqtt, const struct device_info &info)
             continue;
         }
 
-        auto itf_ptr = interface_factory::create_interface(*this, itf.first, type);
+        auto itf_ptr = interface_factory::create_interface(mqtt, info.group, info.name, itf.first, type);
         if (itf_ptr == nullptr) {
             spdlog::error("failed to create interface {} of type {}", itf.first, type);
             continue;

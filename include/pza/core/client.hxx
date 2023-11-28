@@ -31,8 +31,6 @@ public:
     void set_conn_timeout(int timeout);
     int get_conn_timeout(void) const;
 
-    int scan();
-
     device::s_ptr register_device(const std::string &group, const std::string &name);
 
 private:

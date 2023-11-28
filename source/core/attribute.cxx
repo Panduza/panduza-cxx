@@ -6,7 +6,7 @@ attribute::attribute(const std::string &name)
 
 }
 
-void attribute::on_message(const mqtt::const_message_ptr &message)
+void attribute::on_message(mqtt::const_message_ptr message)
 {
     const std::string &payload = message->get_payload_str();
     auto json = nlohmann::json::parse(payload);
@@ -40,7 +40,6 @@ void attribute::on_message(const mqtt::const_message_ptr &message)
         _waiting_for_response = false;
         _cv.notify_one();
     }
-    _is_init = true;
 }
 
 bool attribute::type_is_compatible(const nlohmann::json::value_t &value1, const nlohmann::json::value_t &value2)

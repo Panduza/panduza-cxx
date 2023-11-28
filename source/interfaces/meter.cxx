@@ -2,22 +2,22 @@
 
 #include "../core/attribute.hxx"
 
-using namespace pza;
+using namespace pza::itf;
 
-meter::meter(device &dev, const std::string &name)
-    : itf(dev, name)
+meter::meter(mqtt_service &mqtt, itf_info &info)
+    : itf_base(mqtt, info)
 {
-    _measure = new attribute("measure");
+    _measure = std::make_unique<attribute>("measure");
 
     _measure->add_ro_field<double>("value");
     _measure->add_ro_field<double>("polling_cycle");
 
-    add_attributes({_measure});
+    register_attributes({*_measure});
 }
 
 meter::~meter()
 {
-    delete _measure;
+
 }
 
 double meter::get_measure()

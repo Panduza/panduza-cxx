@@ -2,14 +2,14 @@
 
 #include "../core/attribute.hxx"
 
-using namespace pza;
+using namespace pza::itf;
 
-bps_chan_ctrl::bps_chan_ctrl(device &dev, const std::string &name)
-    : itf(dev, name)
+bps_chan_ctrl::bps_chan_ctrl(mqtt_service &mqtt, itf_info &info)
+    : itf_base(mqtt, info)
 {
-    _att_voltage = new attribute("voltage");
-    _att_current = new attribute("current");
-    _enable = new attribute("enable");
+    _att_voltage = std::make_unique<attribute>("voltage");
+    _att_current = std::make_unique<attribute>("current");
+    _enable = std::make_unique<attribute>("enable");
 
     _att_voltage->add_rw_field<double>("value");
     _att_voltage->add_ro_field<double>("min");
@@ -24,14 +24,12 @@ bps_chan_ctrl::bps_chan_ctrl(device &dev, const std::string &name)
     _enable->add_rw_field<bool>("value");
     _enable->add_rw_field<int>("polling_cycle");
 
-    add_attributes({_att_voltage, _att_current, _enable});
+    register_attributes({*_att_voltage, *_att_current, *_enable});
 }
 
 bps_chan_ctrl::~bps_chan_ctrl()
 {
-    delete _att_voltage;
-    delete _att_current;
-    delete _enable;
+
 }
 
 int bps_chan_ctrl::set_voltage(double volts)

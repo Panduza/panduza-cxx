@@ -17,7 +17,7 @@ public:
     scanner &set_message_callback(const std::function<void(mqtt::const_message_ptr)> &cb) { _message_cb = cb; return *this; }
     scanner &set_condition_callback(const std::function<bool()> &cb) { _condition_cb = cb; return *this; }
     scanner &set_subscription_topic(const std::string &topic) { _sub_topic = topic; return *this; }
-    scanner &set_publisher(const mqtt::const_message_ptr msg) { _pub_msg = msg; return *this; }
+    scanner &set_publisher(mqtt::const_message_ptr msg) { _pub_msg = msg; return *this; }
     int run();
 
 private:
@@ -31,5 +31,5 @@ private:
     std::string _sub_topic;
     mqtt::const_message_ptr _pub_msg;
 
-    void _on_message(const mqtt::const_message_ptr msg);
+    void _on_message(mqtt::const_message_ptr msg);
 };

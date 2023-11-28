@@ -4,14 +4,16 @@
 #include <pza/core/device.hxx>
 #include <pza/core/interface.hxx>
 
+#include <mqtt/message.h>
+
 #include "attribute.hxx"
+#include "mqtt_service.hxx"
 
 using namespace pza;
 
-class itf_impl
+struct itf_impl
 {
-public:
-    itf_impl(device &dev, const std::string &name);
+    explicit itf_impl(mqtt_service &mqtt, itf_info &info);
 
     virtual ~itf_impl() = default;
     itf_impl(const itf_impl&) = delete;
@@ -20,37 +22,67 @@ public:
     itf_impl& operator=(itf_impl&&) = delete;
 
     const std::vector<std::string> &get_attributes() const;
-    const std::string &get_name() const { return _name; }
-    device &get_device() const { return _dev; }
+    const std::string &get_name() const { return info.name; }
 
-    void on_new_message_ready(const nlohmann::json &data);
-    void add_attributes(const std::vector<attribute *> &attributes);
+    void register_attributes(const std::vector<std::reference_wrapper<attribute>> attributes);
 
-private:    
-    device &_dev;
-    std::string _name;
-    std::string _topic_base;
-    std::string _topic_cmd;
+    itf_info &info;
+    std::string topic_base;
+    std::string topic_cmd;
+    mqtt_service &mqtt;
 };
 
-itf_impl::itf_impl(device &dev, const std::string &name)
-    : _name(name),
-    _dev(dev),
-    _topic_base("pza/" + dev.get_group() + "/" + dev.get_name() + "/" + name),
-    _topic_cmd(_topic_base + "/cmds/set")
+itf_impl::itf_impl(mqtt_service &mqtt, itf_info &info)
+    : info(info),
+    topic_base("pza/" + info.group + "/" + info.device_name + "/" + info.name),
+    topic_cmd(topic_base + "/cmds/set"),
+    mqtt(mqtt)
 {
 
 }
 
-itf::itf(device &dev, const std::string &name)
-    : _impl(std::make_unique<itf_impl>(dev, name))
+void itf_impl::register_attributes(const std::vector<std::reference_wrapper<attribute>> attributes)
+{
+    std::mutex mtx;
+    std::unique_lock<std::mutex> lock(mtx);
+    std::condition_variable cv;
+    unsigned int n = 0;
+
+    for (auto wrapper : attributes) {
+        auto &att = wrapper.get();
+        std::string att_topic = topic_base + "/atts/" + att.get_name();
+        mqtt.subscribe(att_topic, [&](mqtt::const_message_ptr msg) {
+            att.on_message(msg);
+            n++;
+            cv.notify_one();
+        });
+    }
+
+    cv.wait_for(lock, std::chrono::seconds(5), [&](){
+        return (n == attributes.size());
+    });
+
+    for (auto wrapper : attributes) {
+        auto &att = wrapper.get();
+        std::string att_topic = topic_base + "/atts" + att.get_name();
+        mqtt.subscribe(att_topic, std::bind(&attribute::on_message, &att, std::placeholders::_1));
+    }
+}
+
+itf_base::itf_base(mqtt_service &mqtt, itf_info &info)
+    : _impl(std::make_unique<itf_impl>(mqtt, info))
 {
 
 }
 
-itf::~itf() = default;
+itf_base::~itf_base() = default;
 
-const std::string &itf::get_name() const
+const std::string &itf_base::get_name() const
 {
     return _impl->get_name();
+}
+
+void itf_base::register_attributes(const std::vector<std::reference_wrapper<attribute>> &attributes)
+{
+    _impl->register_attributes(attributes);
 }

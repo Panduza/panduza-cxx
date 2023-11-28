@@ -17,6 +17,8 @@ target_sources(${LIBRARY_NAME}
     utils/json.cxx
     utils/topic.cxx
 
+    interfaces/device.cxx
+    interfaces/platform.cxx
     interfaces/meter.cxx
     interfaces/bps_chan_ctrl.cxx
 )

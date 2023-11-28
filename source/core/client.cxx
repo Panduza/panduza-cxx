@@ -35,7 +35,7 @@ struct client_impl : mqtt_service
     int get_conn_timeout(void) const { return _conn_timeout; }
 
     int publish(const std::string &topic, const std::string &payload) override;
-    int publish(const mqtt::message::const_ptr_t msg) override;
+    int publish(mqtt::const_message_ptr msg) override;
     int subscribe(const std::string &topic, const std::function<void(mqtt::const_message_ptr)> &cb) override;
     int unsubscribe(const std::string &topic) override;
 
@@ -45,6 +45,7 @@ struct client_impl : mqtt_service
     device::s_ptr register_device(const std::string &group, const std::string &name);
 
     int scan_platforms();
+    int scan_device(const std::string &group, const std::string &name);
     int scan_devices();
 
     void on_platform_info(mqtt::const_message_ptr msg);
@@ -130,7 +131,7 @@ int client_impl::publish(const std::string &topic, const std::string &payload)
     return publish(mqtt::make_message(topic, payload));
 }
 
-int client_impl::publish(const mqtt::const_message_ptr msg)
+int client_impl::publish(mqtt::const_message_ptr msg)
 {
     try {
         _paho_client->publish(msg)->wait_for(std::chrono::seconds(_conn_timeout));
@@ -148,7 +149,7 @@ int client_impl::subscribe(const std::string &topic, const std::function<void(mq
     std::string t;
 
     t = topic::regexify_topic(topic);
-    _listeners.emplace(t, cb);
+    _listeners[t] = cb;
     try {
         _paho_client->subscribe(topic, 0)->wait_for(std::chrono::seconds(_conn_timeout));
     }
@@ -287,48 +288,50 @@ void client_impl::on_device_info(mqtt::const_message_ptr msg)
     _devices_scanned.emplace(base_topic, msg->get_payload_str());
 }
 
+int client_impl::scan_device(const std::string &group, const std::string &name)
+{
+    scanner scanner(*this);
+    std::string combined = group + "/" + name;
+    std::string base_topic = "pza/" + combined;
+
+    scanner.set_scan_timeout(5)
+        .set_message_callback(std::bind(&client_impl::on_device_info, this, std::placeholders::_1))
+        .set_condition_callback([&](void) {
+            return _devices_scanned.count(base_topic) > 0;
+        })
+        .set_publisher(mqtt::make_message("pza", combined))
+        .set_subscription_topic(base_topic + "/device/atts/info");
+
+    if (scanner.run() < 0) {
+        spdlog::error("timed out waiting for device {}", combined);
+        return -1;
+    }
+    return 0;
+}
+
 device::s_ptr client_impl::register_device(const std::string &group, const std::string &name)
 {
-    device_info info;
+    device_info info {};
     device::s_ptr dev;
+    std::string base_topic = "pza/" + group + "/" + name;
 
+    if (scan_device(group, name) < 0) {
+        spdlog::error("failed to scan device {}", name);
+        return nullptr;
+    }
+    
     info.group = group;
     info.name = name;
-    /*
 
-    if (_scanner.device_was_scanned(group, name) == false) {
-        spdlog::error("device {} was not scanned", name);
+    if (json::get_unsigned_int(_devices_scanned[base_topic], "info", "number_of_interfaces", info.number_of_interfaces) < 0) {
+        spdlog::error("failed to parse device info: {}", _devices_scanned[base_topic]);
         return nullptr;
     }
 
-    if (_scanner.scan_device_identity(group, name) < 0) {
-        spdlog::error("failed to scan identity for device {}", name);
-        return nullptr;
-    }
-
-    if (json::get_string(_scanner.get_device_identity(), "identity", "model", info.model) < 0) {
-        spdlog::error("Device {} does not have a model", name);
-        return nullptr;
-    }
-
-    if (json::get_string(_scanner.get_device_identity(), "identity", "manufacturer", info.manufacturer) < 0) {
-        spdlog::error("Device {} does not have a manufacturer", name);
-        return nullptr;
-    }
-
-    if (json::get_string(_scanner.get_device_identity(), "identity", "family", info.family) < 0) {
-        spdlog::error("Device {} does not have a family", name);
-        return nullptr;
-    }
-
-    if (_scanner.scan_interfaces(group, name) < 0) {
-        spdlog::error("failed to scan interfaces for device {}", name);
-        return nullptr;
-    }
-
-    std::transform(info.family.begin(), info.family.end(), info.family.begin(), ::tolower);
-*/
-    return std::make_shared<device>(*this, info);
+    dev = std::make_shared<device>(*this, info);
+    if (dev)
+        _devices[group + "/" + name] = dev;
+    return dev;
 }
 
 client::client(const std::string &addr, int port, std::optional<std::string> id)
@@ -385,11 +388,4 @@ int client::get_conn_timeout(void) const
 device::s_ptr client::register_device(const std::string &group, const std::string &name)
 {
     return _impl->register_device(group, name);
-}
-
-int client::scan()
-{
-    if (_impl->scan_platforms() < 0)
-        return -1;
-    return _impl->scan_devices();
 }
