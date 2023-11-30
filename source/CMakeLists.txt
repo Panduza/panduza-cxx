@@ -14,13 +14,13 @@ target_sources(${LIBRARY_NAME}
     core/interface_factory.cxx
     core/attribute.cxx
 
-    utils/json.cxx
+    utils/json_attribute.cxx
     utils/topic.cxx
 
     interfaces/device.cxx
-    interfaces/platform.cxx
-    interfaces/meter.cxx
-    interfaces/bps_chan_ctrl.cxx
+    #interfaces/platform.cxx
+    #interfaces/meter.cxx
+    #interfaces/bps_chan_ctrl.cxx
 )
 
 target_include_directories(${LIBRARY_NAME} PUBLIC

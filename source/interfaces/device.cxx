@@ -9,9 +9,7 @@ device::device(mqtt_service &mqtt, itf_info &info)
 {
     _identity = std::make_unique<attribute>("identity");
 
-    _identity->add_ro_field<std::string>("family");
-    _identity->add_ro_field<std::string>("model");
-    _identity->add_ro_field<std::string>("manufacturer");
+    _identity->register_field<std::string>("family");
 
     register_attributes({*_identity});
 }
@@ -19,4 +17,19 @@ device::device(mqtt_service &mqtt, itf_info &info)
 device::~device()
 {
 
+}
+
+std::string device::get_family()
+{
+    return _identity->get_field<std::string>("family");
+}
+
+std::string device::get_model()
+{
+    return _identity->get_field<std::string>("model");
+}
+
+std::string device::get_manufacturer()
+{
+    return _identity->get_field<std::string>("manufacturer");
 }

@@ -19,7 +19,11 @@ public:
     device(mqtt_service &mqtt, itf_info &info);
     ~device();
 
+    std::string get_model();
+    std::string get_manufacturer();
+    std::string get_family();
+
 private:
-    std::unique_ptr<attribute> _identity;
+    attribute_ptr _identity;
 };
 };

@@ -1,8 +1,6 @@
 #include <unistd.h>
 
 #include <pza/core/client.hxx>
-#include <pza/interfaces/meter.hxx>
-#include <pza/interfaces/bps_chan_ctrl.hxx>
 
 int main()
 {

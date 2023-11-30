@@ -6,79 +6,36 @@ attribute::attribute(const std::string &name)
 
 }
 
-void attribute::on_message(mqtt::const_message_ptr message)
+void attribute::on_message(mqtt::const_message_ptr msg)
 {
-    const std::string &payload = message->get_payload_str();
-    auto json = nlohmann::json::parse(payload);
+    auto json = json_attribute(_name);
 
-    json = json[_name];
-    for (auto it = json.begin(); it != json.end(); ++it) {
-        spdlog::trace("Attribute {:s} received data for field {:s} with value {:s}", _name, it.key(), it.value().dump());
+    if (json.parse(msg->get_payload()) < 0) {
+        spdlog::error("attribute::on_message: failed to parse payload");
+        return;
+    }
 
-        auto data = it.value();
-        auto elem = _fields.find(it.key());
+    for (auto &field : _fields) {
+        auto &name = field.first;
+        auto &type = field.second;
 
-        if (elem == _fields.end())
-            continue;
-
-        auto &f = elem->second;
-        const auto &type = f.type();
-
-        if (type == typeid(field<double>))
-            _assign_value<double>(f, data);
-        else if (type == typeid(field<int>))
-            _assign_value<int>(f, data);
-        else if (type == typeid(field<bool>))
-            _assign_value<bool>(f, data);
-        else if (type == typeid(field<std::string>))
-            _assign_value<std::string>(f, data);
+        if (std::holds_alternative<std::string>(type)) {
+            _set_field<std::string>(json, name);
+        }
+        else if (std::holds_alternative<unsigned int>(type)) {
+            _set_field<unsigned int>(json, name);
+        }
+        else if (std::holds_alternative<int>(type)) {
+            _set_field<int>(json, name);
+        }
+        else if (std::holds_alternative<double>(type)) {
+            _set_field<double>(json, name);
+        }
+        else if (std::holds_alternative<bool>(type)) {
+            _set_field<bool>(json, name);
+        }
         else {
-            spdlog::warn("Type mismatch for attribute {:s}, field {:s}.. ", _name, it.key());
-            return ;
+            spdlog::error("attribute::on_message: unknown field type");
         }
-
-        _waiting_for_response = false;
-        _cv.notify_one();
     }
-}
-
-bool attribute::type_is_compatible(const nlohmann::json::value_t &value1, const nlohmann::json::value_t &value2)
-{
-    constexpr auto INTEGER = nlohmann::json::value_t::number_integer;
-    constexpr auto UNSIGNED = nlohmann::json::value_t::number_unsigned;
-    constexpr auto FLOAT = nlohmann::json::value_t::number_float;
-
-    auto isNumber = [](const nlohmann::json::value_t &value)
-    {
-        return value == INTEGER || value == UNSIGNED || value == FLOAT;
-    };
-
-    return (value1 == value2) || (isNumber(value1) && isNumber(value2));
-}
-
-int attribute::_data_from_field(const nlohmann::json &data)
-{
-    nlohmann::json json;
-    int ret = -1;
-
-    json[_name] = data;
-
-    if (_callback) {
-        spdlog::trace("Calling callback for attribute {:s}", _name);
-        spdlog::trace("Data: {}", json.dump());
-        _callback(json);
-    }
-    
-    std::unique_lock<std::mutex> lock(_mtx);
-    
-    for (int i = 0; i < SET_TIMEOUT_RETRIES; i++)
-    {
-        if (_cv.wait_for(lock, std::chrono::seconds(SET_TIMEOUT), [&]() {return !_waiting_for_response; }) == true) {
-            ret = 0;
-            break;
-        }
-        else
-            spdlog::warn("Timeout while waiting for response from attribute {:s}, retrying...", _name);
-    }
-    return ret;
 }

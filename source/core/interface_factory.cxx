@@ -3,9 +3,6 @@
 #include <pza/core/device.hxx>
 
 #include <pza/interfaces/device.hxx>
-#include <pza/interfaces/platform.hxx>
-#include <pza/interfaces/bps_chan_ctrl.hxx>
-#include <pza/interfaces/meter.hxx>
 
 template <typename T>
 static itf_base::s_ptr allocate_interface(mqtt_service &mqtt, itf_info &info)
@@ -15,9 +12,9 @@ static itf_base::s_ptr allocate_interface(mqtt_service &mqtt, itf_info &info)
 
 static std::unordered_map<std::string, interface_factory::factory_function> factory_map = {
     { "device", allocate_interface<itf::device> },
-    { "ammeter", allocate_interface<itf::meter> },
-    { "voltmeter", allocate_interface<itf::meter> },
-    { "bpc", allocate_interface<itf::bps_chan_ctrl> }
+    //{ "ammeter", allocate_interface<itf::meter> },
+    //{ "voltmeter", allocate_interface<itf::meter> },
+    //{ "bpc", allocate_interface<itf::bps_chan_ctrl> }
 };
 
 itf_base::s_ptr interface_factory::create_interface(mqtt_service &mqtt, const std::string &group, const std::string &device_name, const std::string &name, const std::string &type)

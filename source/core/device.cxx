@@ -8,8 +8,9 @@
 #include <pza/core/device.hxx>
 #include <pza/core/interface.hxx>
 
+#include <pza/interfaces/device.hxx>
 
-#include "../utils/json.hxx"
+#include "../utils/json_attribute.hxx"
 #include "interface_factory.hxx"
 #include "mqtt_service.hxx"
 #include "scanner.hxx"
@@ -20,17 +21,12 @@ struct device_impl
 {
     explicit device_impl(mqtt_service &mqtt, const struct device_info &info);
 
-    const std::string &get_name() const { return info.name; }
-    const std::string &get_group() const { return info.group; }
-    const std::string &get_model() const { return info.model; }
-    const std::string &get_manufacturer() const { return info.manufacturer; }
-    const std::string &get_family() const { return info.family; }
-
     void on_interface_info(mqtt::const_message_ptr msg);
 
     struct device_info info;
     std::unordered_map<std::string, std::string> interfaces_scanned;
     std::unordered_map<std::string, itf_base::s_ptr> interfaces;
+    itf::device::s_ptr device_interface = nullptr;
 };
 
 device_impl::device_impl(mqtt_service &mqtt, const struct device_info &info)
@@ -60,14 +56,21 @@ void device_impl::on_interface_info(mqtt::const_message_ptr msg)
     interfaces_scanned[itf_name] = msg->get_payload_str();
 }
 
-device::device(mqtt_service &mqtt, const struct device_info &info)
+device::device(mqtt_service &mqtt, struct device_info &info)
     : _impl(std::make_unique<device_impl>(mqtt, info))
 {
+    json_attribute json("info");
+
     for (auto &itf : _impl->interfaces_scanned) {
         std::string type;
 
-        if (json::get_string(itf.second, "info", "type", type) < 0) {
-            spdlog::error("failed to get interface type");
+        if (json.parse(itf.second) < 0) {
+            spdlog::error("failed to parse attribute info for interface {}", itf.first);
+            continue;
+        }
+
+        if (json.get_string("type", type) < 0) {
+            spdlog::error("failed to get type for interface {}", itf.first);
             continue;
         }
 
@@ -78,6 +81,17 @@ device::device(mqtt_service &mqtt, const struct device_info &info)
         }
         _impl->interfaces[itf.first] = itf_ptr;
     }
+
+    if (_impl->interfaces.find("device") != _impl->interfaces.end()) {
+        _impl->device_interface = std::static_pointer_cast<itf::device>(_impl->interfaces["device"]);
+        info.family = _impl->device_interface->get_family();
+        info.manufacturer = _impl->device_interface->get_manufacturer();
+        info.model = _impl->device_interface->get_model();
+
+    }
+    else {
+        throw std::runtime_error("device interface not found");
+    }
 }
 
 device::~device()
@@ -87,25 +101,25 @@ device::~device()
 
 const std::string &device::get_name() const
 {
-    return _impl->get_name();
+    return _impl->info.name;
 }
 
 const std::string &device::get_group() const
 {
-    return _impl->get_group();
+    return _impl->info.group;
 }   
 
 const std::string &device::get_model() const
 {
-    return _impl->get_model();
+    return _impl->info.model;
 }
 
 const std::string &device::get_manufacturer() const
 {
-    return _impl->get_manufacturer();
+    return _impl->info.manufacturer;
 }
 
 const std::string &device::get_family() const
 {
-    return _impl->get_family();
+    return _impl->info.family;
 }

@@ -8,7 +8,7 @@
 #include <mqtt/client.h>
 #include <spdlog/spdlog.h>
 
-#include "../utils/json.hxx"
+#include "../utils/json_attribute.hxx"
 #include "../utils/topic.hxx"
 #include "scanner.hxx"
 #include "interface_factory.hxx"
@@ -240,8 +240,14 @@ void client_impl::on_platform_info(mqtt::const_message_ptr msg)
     const std::string &topic = msg->get_topic();
     std::string type;
     unsigned int val;
+    json_attribute json("info");
 
-    if (json::get_string(payload, "info", "type", type) < 0) {
+    if (json.parse(payload) < 0) {
+        spdlog::error("failed to parse platform info: {}", payload);
+        return;
+    }
+
+    if (json.get_string("type", type) < 0) {
         spdlog::error("failed to parse type info: {}", payload);
         return;
     }
@@ -252,7 +258,7 @@ void client_impl::on_platform_info(mqtt::const_message_ptr msg)
 
     spdlog::trace("received platform info: {}", payload);
 
-    if (json::get_unsigned_int(payload, "info", "number_of_devices", val) < 0) {
+    if (json.get_unsigned_int("number_of_devices", val) < 0) {
         spdlog::error("failed to parse platform info: {}", payload);
         return;
     }
@@ -314,23 +320,35 @@ device::s_ptr client_impl::register_device(const std::string &group, const std::
     device_info info {};
     device::s_ptr dev;
     std::string base_topic = "pza/" + group + "/" + name;
+    json_attribute json("info");
+    auto device_payload = _devices_scanned[base_topic];
+
+    if (json.parse(device_payload) < 0) {
+        spdlog::error("failed to parse device info for device {}", name);
+        return nullptr;
+    }
 
     if (scan_device(group, name) < 0) {
         spdlog::error("failed to scan device {}", name);
         return nullptr;
     }
     
-    info.group = group;
-    info.name = name;
-
-    if (json::get_unsigned_int(_devices_scanned[base_topic], "info", "number_of_interfaces", info.number_of_interfaces) < 0) {
+    if (json.get_unsigned_int("number_of_interfaces", info.number_of_interfaces) < 0) {
         spdlog::error("failed to parse device info: {}", _devices_scanned[base_topic]);
         return nullptr;
     }
 
-    dev = std::make_shared<device>(*this, info);
-    if (dev)
-        _devices[group + "/" + name] = dev;
+    info.group = group;
+    info.name = name;
+
+    try {
+        dev = std::make_shared<device>(*this, info);
+    }
+    catch (const std::exception &exc) {
+        spdlog::error("failed to create device: {}", exc.what());
+        return nullptr;
+    }
+    _devices[group + "/" + name] = dev;
     return dev;
 }
 

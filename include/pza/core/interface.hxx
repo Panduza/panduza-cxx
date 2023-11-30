@@ -31,6 +31,8 @@ public:
     using u_ptr = std::unique_ptr<itf_base>;
     using w_ptr = std::weak_ptr<itf_base>;
 
+    using attribute_ptr = std::unique_ptr<attribute>;
+
     virtual ~itf_base();
     itf_base(const itf_base&) = delete;
     itf_base& operator=(const itf_base&) = delete;
@@ -42,7 +44,7 @@ public:
 protected:
     explicit itf_base(mqtt_service &mqtt, itf_info &info);
 
-    void register_attributes(const std::vector<std::reference_wrapper<attribute>> &attributes);
+    void register_attributes(const std::vector<std::reference_wrapper<attribute>> attributes);
 
     std::unique_ptr<itf_impl> _impl;
 };

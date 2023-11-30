@@ -49,23 +49,23 @@ void itf_impl::register_attributes(const std::vector<std::reference_wrapper<attr
     unsigned int n = 0;
 
     for (auto wrapper : attributes) {
-        auto &att = wrapper.get();
-        std::string att_topic = topic_base + "/atts/" + att.get_name();
-        mqtt.subscribe(att_topic, [&](mqtt::const_message_ptr msg) {
-            att.on_message(msg);
-            n++;
-            cv.notify_one();
-        });
+       auto &att = wrapper.get();
+       std::string att_topic = topic_base + "/atts/" + att.get_name();
+       mqtt.subscribe(att_topic, [&](mqtt::const_message_ptr msg) {
+           att.on_message(msg);
+           n++;
+           cv.notify_one();
+       });
     }
 
     cv.wait_for(lock, std::chrono::seconds(5), [&](){
-        return (n == attributes.size());
+       return (n == attributes.size());
     });
 
     for (auto wrapper : attributes) {
-        auto &att = wrapper.get();
-        std::string att_topic = topic_base + "/atts" + att.get_name();
-        mqtt.subscribe(att_topic, std::bind(&attribute::on_message, &att, std::placeholders::_1));
+       auto &att = wrapper.get();
+       std::string att_topic = topic_base + "/atts" + att.get_name();
+       mqtt.subscribe(att_topic, std::bind(&attribute::on_message, &att, std::placeholders::_1));
     }
 }
 
@@ -75,14 +75,17 @@ itf_base::itf_base(mqtt_service &mqtt, itf_info &info)
 
 }
 
-itf_base::~itf_base() = default;
+itf_base::~itf_base()
+{
+    
+}
 
 const std::string &itf_base::get_name() const
 {
     return _impl->get_name();
 }
 
-void itf_base::register_attributes(const std::vector<std::reference_wrapper<attribute>> &attributes)
+void itf_base::register_attributes(const std::vector<std::reference_wrapper<attribute>> attributes)
 {
     _impl->register_attributes(attributes);
 }

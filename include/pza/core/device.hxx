@@ -29,7 +29,7 @@ public:
     using u_ptr = std::unique_ptr<device>;
     using w_ptr = std::weak_ptr<device>;
 
-    explicit device(mqtt_service &mqtt, const struct device_info &info);
+    explicit device(mqtt_service &mqtt, struct device_info &info);
     ~device();
 
     const std::string &get_name() const;
