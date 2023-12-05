@@ -1,10 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <functional>
-#include <string>
-
-#include <pza/core/device.hxx>
 #include <pza/core/interface.hxx>
 
 namespace pza::itf
@@ -16,7 +11,7 @@ public:
     using u_ptr = std::unique_ptr<device>;
     using w_ptr = std::weak_ptr<device>;
     
-    device(mqtt_service &mqtt, itf_info &info);
+    explicit device(mqtt_service &mqtt, itf_info &info);
     ~device();
 
     std::string get_model();

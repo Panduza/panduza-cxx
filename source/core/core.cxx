@@ -1,4 +1,6 @@
-#include "core.hxx"
+#include <pza/core/core.hxx>
+
+using namespace pza;
 
 void core::set_log_level(log_level level)
 {

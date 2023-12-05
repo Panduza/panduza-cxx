@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream>
 
-#include "../core/core.hxx"
+#include <pza/core/core.hxx>
 
 class topic
 {

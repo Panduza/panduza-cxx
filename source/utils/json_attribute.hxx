@@ -13,7 +13,7 @@ public:
     int get(const std::string &key, T &t)
     {
         try {
-            t = _json[_attribute][key].get<T>();
+            t = _json[key].get<T>();
         }
         catch (nlohmann::json::type_error &e) {
             return -1;

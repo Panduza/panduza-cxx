@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 
 #include <pza/core/device.hxx>
@@ -28,12 +29,24 @@ public:
     const std::string &get_id(void) const;
     int get_port(void) const;
 
-    void set_conn_timeout(int timeout);
-    int get_conn_timeout(void) const;
+    void set_connection_timeout(unsigned int timeout_ms);
+    unsigned int get_connection_timeout(void) const;
 
-    device::s_ptr register_device(const std::string &group, const std::string &name);
+    int scan_platforms(unsigned int timeout_ms = platforms_timeout_default);
+
+    device::s_ptr register_device(const std::string &group, const std::string &name, unsigned int timeout_ms = device_timeout_default);
+    int register_devices(unsigned int timeout_ms = device_timeout_default * 5);
+
+    device::s_ptr get_device(const std::string &group, const std::string &name) const;
+    std::vector<device::s_ptr> get_devices() const;
+    std::vector<device::s_ptr> get_devices_in_group(const std::string &group) const;
+
+    std::set<std::string> get_groups() const;
 
 private:
+    static constexpr unsigned int platforms_timeout_default = 500;
+    static constexpr unsigned int device_timeout_default = 500;
+
     std::unique_ptr<client_impl> _impl;
 };
 };

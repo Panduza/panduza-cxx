@@ -10,13 +10,15 @@ device::device(mqtt_service &mqtt, itf_info &info)
     _identity = std::make_unique<attribute>("identity");
 
     _identity->register_field<std::string>("family");
+    _identity->register_field<std::string>("model");
+    _identity->register_field<std::string>("manufacturer");
 
     register_attributes({*_identity});
 }
 
 device::~device()
 {
-
+    spdlog::info("device::~device");
 }
 
 std::string device::get_family()

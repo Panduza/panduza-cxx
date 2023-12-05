@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -40,11 +41,12 @@ public:
     itf_base& operator=(itf_base&&) = delete;
 
     const std::string &get_name() const;
+    const std::string &get_type() const;
 
 protected:
     explicit itf_base(mqtt_service &mqtt, itf_info &info);
 
-    void register_attributes(const std::vector<std::reference_wrapper<attribute>> attributes);
+    void register_attributes(const std::list<std::reference_wrapper<attribute>> attributes);
 
     std::unique_ptr<itf_impl> _impl;
 };

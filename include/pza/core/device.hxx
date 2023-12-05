@@ -8,19 +8,11 @@
 class device_impl;
 class mqtt_service;
 
+struct device_info;
 namespace pza
 {
 class client;
 
-struct device_info
-{
-    std::string name;
-    std::string group;
-    std::string model;
-    std::string manufacturer;
-    std::string family;
-    unsigned int number_of_interfaces;
-};
 
 class device
 {
@@ -37,6 +29,15 @@ public:
     const std::string &get_model() const;
     const std::string &get_manufacturer() const;
     const std::string &get_family() const;
+
+    int get_number_of_interfaces() const;
+    
+    itf_base::s_ptr get_interface(const std::string &name) const;
+    itf_base::s_ptr get_interface(const std::string &interface_group, unsigned int idx, const std::string &name) const;
+
+    std::vector<std::string> get_interface_names() const;
+
+    unsigned int get_interface_group_count(const std::string &group) const;
 
 private:
     std::unique_ptr<device_impl> _impl;

@@ -6,6 +6,11 @@ attribute::attribute(const std::string &name)
 
 }
 
+attribute::~attribute()
+{
+    spdlog::debug("attribute::~attribute: {}", _name);
+}
+
 void attribute::on_message(mqtt::const_message_ptr msg)
 {
     auto json = json_attribute(_name);
@@ -38,4 +43,20 @@ void attribute::on_message(mqtt::const_message_ptr msg)
             spdlog::error("attribute::on_message: unknown field type");
         }
     }
+
+    for (auto &cb : _callbacks) {
+        cb();
+    }
+}
+
+void attribute::register_callback(const std::function<void(void)> &cb)
+{
+    _callbacks.push_back(cb);
+}
+
+void attribute::remove_callback(const std::function<void(void)> &cb)
+{
+    _callbacks.remove_if([&](const std::function<void(void)> &f) {
+        return f.target_type() == cb.target_type() && f.target<void(void)>() == cb.target<void(void)>();
+    });
 }

@@ -4,6 +4,8 @@
 
 #include "version.hxx"
 
+namespace pza
+{
 class core
 {
 public:
@@ -28,4 +30,5 @@ public:
     static void set_log_level(log_level level);
     static log_level get_log_level(void);
     static std::string get_version(void);
+};
 };

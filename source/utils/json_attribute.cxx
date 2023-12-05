@@ -9,7 +9,8 @@ json_attribute::json_attribute(const std::string &attribute)
 int json_attribute::parse(const std::string &payload)
 {
     try {
-        _json = nlohmann::json::parse(payload)[_attribute];
+        _json = nlohmann::json::parse(payload);
+        _json = _json[_attribute];
     }
     catch (nlohmann::json::parse_error &e) {
         return -1;

@@ -10,10 +10,9 @@
 class scanner
 {
 public:
-
     explicit scanner(mqtt_service &mqtt);
 
-    scanner &set_scan_timeout(unsigned int timeout) { _scan_timeout = timeout; return *this; }
+    scanner &set_scan_timeout_ms(unsigned int timeout) { _scan_timeout = timeout; return *this; }
     scanner &set_message_callback(const std::function<void(mqtt::const_message_ptr)> &cb) { _message_cb = cb; return *this; }
     scanner &set_condition_callback(const std::function<bool()> &cb) { _condition_cb = cb; return *this; }
     scanner &set_subscription_topic(const std::string &topic) { _sub_topic = topic; return *this; }

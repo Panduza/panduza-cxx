@@ -1,10 +1,12 @@
 #pragma once
 
+#include <list>
 #include <string>
 #include <unordered_map>
 #include <variant>
 
 #include <mqtt/message.h>
+#include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
 #include "../utils/json_attribute.hxx"
@@ -13,7 +15,10 @@ class attribute
 {
 public:
     explicit attribute(const std::string &name);
+    ~attribute();
 
+    const std::string &get_name() const { return _name; }
+    
     template<typename T>
     void register_field(const std::string &name)
     {
@@ -26,8 +31,34 @@ public:
         return std::get<T>(_fields[name]);
     }
 
+    template<typename T>
+    int set(const std::string &field, const T &val)
+    {
+        nlohmann::json data;
+        std::condition_variable cv;
+        std::mutex mtx;
+        std::unique_lock<std::mutex> lock(mtx);
+
+        data[_name][field] = val;
+
+        if (_msg_cb(data) < 0) {
+            spdlog::error("attribute::set: failed to send message");
+            return -1;
+        }
+
+        if (cv.wait_for(lock, std::chrono::seconds(2), [&]() { return std::get<T>(_fields[field]) == val; }) == false) {
+            spdlog::error("attribute::set: timed out waiting for value to be set");
+            return -1;
+        }
+        return 0;
+    }
+
     void on_message(mqtt::const_message_ptr msg);
-    const std::string &get_name() const { return _name; }
+
+    void register_callback(const std::function<void(void)> &cb);
+    void remove_callback(const std::function<void(void)> &cb);
+
+    void set_msg_callback(const std::function<int(const nlohmann::json &data)> &cb) { _msg_cb = cb; }
 
 private:
     using field_types = std::variant<std::string, unsigned int, int, double, bool>;
@@ -45,4 +76,6 @@ private:
 
     std::string _name;
     std::unordered_map<std::string, field_types> _fields;
+    std::list<std::function<void(void)>> _callbacks;
+    std::function<int(const nlohmann::json &data)> _msg_cb;
 };

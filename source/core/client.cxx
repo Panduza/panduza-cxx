@@ -17,7 +17,19 @@
 
 using namespace pza;
 
-static constexpr int conn_timeout_default = 5; // in seconds
+static constexpr unsigned int conn_timeout_default_ms = 2000;
+static constexpr unsigned int msg_timeout_default_ms = 500;
+static constexpr unsigned int platforms_timeout_ms = 500;
+
+struct device_info
+{
+    std::string name;
+    std::string group;
+    std::string model;
+    std::string manufacturer;
+    std::string family;
+    unsigned int number_of_interfaces;
+};
 
 struct client_impl : mqtt_service
 {
@@ -31,8 +43,8 @@ struct client_impl : mqtt_service
     const std::string &get_id(void) const { return _id; }
     int get_port(void) const { return _port; }
 
-    void set_conn_timeout(int timeout) { _conn_timeout = timeout; }
-    int get_conn_timeout(void) const { return _conn_timeout; }
+    void set_connection_timeout(unsigned int timeout) { _conn_timeout = timeout; }
+    unsigned int get_connection_timeout(void) const { return _conn_timeout; }
 
     int publish(const std::string &topic, const std::string &payload) override;
     int publish(mqtt::const_message_ptr msg) override;
@@ -42,17 +54,25 @@ struct client_impl : mqtt_service
     void connection_lost(const std::string &cause);
     void message_arrived(mqtt::const_message_ptr msg);
 
-    device::s_ptr register_device(const std::string &group, const std::string &name);
-
-    int scan_platforms();
-    int scan_device(const std::string &group, const std::string &name);
-    int scan_devices();
+    int scan_platforms(unsigned int timeout_ms);
+    int scan_device(const std::string &group, const std::string &name, unsigned int timeout_ms);
+    int scan_devices(unsigned int timeout_ms);
 
     void on_platform_info(mqtt::const_message_ptr msg);
     void on_device_info(mqtt::const_message_ptr msg);
+    
+    device::s_ptr create_device(const std::string &group, const std::string &name);
+    device::s_ptr register_device(const std::string &group, const std::string &name, unsigned int timeout_ms);
+    int register_devices(unsigned int timeout_ms);
+
+    device::s_ptr get_device(const std::string &group, const std::string &name) const;
+    std::vector<device::s_ptr> get_devices() const;
+    std::vector<device::s_ptr> get_devices_in_group(const std::string &group) const;
+
+    std::set<std::string> get_groups() const;
 
     mqtt::async_client::ptr_t _paho_client;
-    unsigned int _conn_timeout = conn_timeout_default;
+    unsigned int _conn_timeout = conn_timeout_default_ms;
     std::string _addr;
     int _port;
     std::string _id;
@@ -94,11 +114,8 @@ int client_impl::connect(void)
     connOpts.set_keep_alive_interval(20);
     connOpts.set_clean_session(true);
 
-    try {
-        _paho_client->connect(connOpts)->wait_for(std::chrono::seconds(_conn_timeout));
-    }
-    catch (const mqtt::exception &exc) {
-        spdlog::error("failed to connect to client: {}", exc.what());
+    if (_paho_client->connect(connOpts)->wait_for(std::chrono::milliseconds(_conn_timeout)) == false) {
+        spdlog::error("failed to connect to client: {}", _id);
         return -1;
     }
 
@@ -110,11 +127,8 @@ int client_impl::disconnect(void)
 {
     spdlog::debug("Attempting to disconnect from {}...", _addr);
 
-    try {
-        _paho_client->disconnect()->wait_for(std::chrono::seconds(_conn_timeout));
-    }
-    catch (const mqtt::exception &exc) {
-        spdlog::error("failed to disconnect: {}", exc.what());
+    if (_paho_client->disconnect()->wait_for(std::chrono::milliseconds(_conn_timeout)) == false) {
+        spdlog::error("failed to disconnect from client: {}", _id);
         return -1;
     }
     spdlog::info("disconnected from {}", _addr);
@@ -133,11 +147,8 @@ int client_impl::publish(const std::string &topic, const std::string &payload)
 
 int client_impl::publish(mqtt::const_message_ptr msg)
 {
-    try {
-        _paho_client->publish(msg)->wait_for(std::chrono::seconds(_conn_timeout));
-    }
-    catch (const mqtt::exception &exc) {
-        spdlog::error("failed to publish: {}", exc.what());
+    if (_paho_client->publish(msg)->wait_for(std::chrono::milliseconds(msg_timeout_default_ms)) == false) {
+        spdlog::error("failed to publish from client: {}", _id);
         return -1;
     }
     spdlog::trace("published message {} to {}", msg->get_payload_str(), msg->get_topic());
@@ -150,11 +161,8 @@ int client_impl::subscribe(const std::string &topic, const std::function<void(mq
 
     t = topic::regexify_topic(topic);
     _listeners[t] = cb;
-    try {
-        _paho_client->subscribe(topic, 0)->wait_for(std::chrono::seconds(_conn_timeout));
-    }
-    catch (const mqtt::exception &exc) {
-        spdlog::error("failed to subscribe: {}", exc.what());
+    if (_paho_client->subscribe(topic, 0)->wait_for(std::chrono::seconds(_conn_timeout)) == false) {
+        spdlog::error("failed to subscribe to topic: {} on client {}", topic, _id);
         _listeners.erase(t);
         return -1;
     }
@@ -166,13 +174,13 @@ int client_impl::unsubscribe(const std::string &topic)
 {
     std::string t;
 
-    try {
-        _paho_client->unsubscribe(topic)->wait_for(std::chrono::seconds(_conn_timeout));
-    }
-    catch (const mqtt::exception &exc) {
-        spdlog::error("failed to unsubscribe: {}", exc.what());
+    spdlog::trace("CUCU");
+
+    if (_paho_client->unsubscribe(topic)->wait_for(std::chrono::seconds(_conn_timeout)) == false) {
+        spdlog::error("failed to unsubscribe from topic: {} on client {}", topic, _id);
         return -1;
     }
+    spdlog::trace("unsubscribed from topic: {}", topic);
     t = topic::regexify_topic(topic);
     for (auto it = _listeners.begin(); it != _listeners.end(); ) {
         if (topic::topic_matches(it->first, t)) {
@@ -181,7 +189,6 @@ int client_impl::unsubscribe(const std::string &topic)
         else
             ++it;
     }
-    spdlog::trace("unsubscribed from topic: {}", topic);
     return 0;
 }
 
@@ -201,25 +208,21 @@ void client_impl::message_arrived(mqtt::const_message_ptr msg)
     }
 }
 
-int client_impl::scan_platforms()
+int client_impl::scan_platforms(unsigned int timeout_ms)
 {
     scanner scanner(*this);
 
     _platforms_scanned.clear();
 
-    scanner.set_scan_timeout(5)
+    scanner.set_scan_timeout_ms(timeout_ms)
         .set_message_callback(std::bind(&client_impl::on_platform_info, this, std::placeholders::_1))
         .set_condition_callback([&](void) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(platforms_timeout_ms));
             return true;
         })
         .set_publisher(mqtt::make_message("pza", "p"))
-        .set_subscription_topic("pza/server/+/+/atts/info");
-
-    if (scanner.run() == false) {
-        spdlog::error("timed out waiting for platforms");
-        return -1;
-    }
+        .set_subscription_topic("pza/server/+/+/atts/info")
+        .run();
 
     if (_platforms_scanned.empty()) {
         spdlog::error("No platforms found");
@@ -265,21 +268,21 @@ void client_impl::on_platform_info(mqtt::const_message_ptr msg)
     _device_count += val;
 }
 
-int client_impl::scan_devices()
+int client_impl::scan_devices(unsigned int timeout_ms)
 {
     scanner scanner(*this);
 
     _devices_scanned.clear();
 
-    scanner.set_message_callback(std::bind(&client_impl::on_device_info, this, std::placeholders::_1))
+    scanner.set_scan_timeout_ms(timeout_ms)
+        .set_message_callback(std::bind(&client_impl::on_device_info, this, std::placeholders::_1))
         .set_condition_callback([&](void) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            return true;
+            return (_device_count == _devices_scanned.size());
         })
         .set_publisher(mqtt::make_message("pza", "d"))
         .set_subscription_topic("pza/+/+/device/atts/info");
 
-    if (scanner.run() == false) {
+    if (scanner.run() < 0) {
         spdlog::error("timed out waiting for devices");
         return -1;
     }
@@ -288,25 +291,26 @@ int client_impl::scan_devices()
 
 void client_impl::on_device_info(mqtt::const_message_ptr msg)
 {
-    std::string base_topic = msg->get_topic().substr(0, msg->get_topic().find("/device/atts/info"));
+    std::string base_topic = msg->get_topic().substr(4, msg->get_topic().find("/device/atts/info") - 4);
 
     spdlog::trace("received device info: {} {}", msg->get_topic(), msg->get_payload_str());
     _devices_scanned.emplace(base_topic, msg->get_payload_str());
 }
 
-int client_impl::scan_device(const std::string &group, const std::string &name)
+int client_impl::scan_device(const std::string &group, const std::string &name, unsigned int timeout_ms)
 {
     scanner scanner(*this);
-    std::string combined = group + "/" + name;
-    std::string base_topic = "pza/" + combined;
+    auto combined = group + "/" + name;
 
-    scanner.set_scan_timeout(5)
+    _devices.erase(combined);
+    
+    scanner.set_scan_timeout_ms(timeout_ms)
         .set_message_callback(std::bind(&client_impl::on_device_info, this, std::placeholders::_1))
         .set_condition_callback([&](void) {
-            return _devices_scanned.count(base_topic) > 0;
+            return _devices_scanned.count(combined) > 0;
         })
         .set_publisher(mqtt::make_message("pza", combined))
-        .set_subscription_topic(base_topic + "/device/atts/info");
+        .set_subscription_topic("pza/" + combined + "/device/atts/info");
 
     if (scanner.run() < 0) {
         spdlog::error("timed out waiting for device {}", combined);
@@ -315,26 +319,22 @@ int client_impl::scan_device(const std::string &group, const std::string &name)
     return 0;
 }
 
-device::s_ptr client_impl::register_device(const std::string &group, const std::string &name)
+device::s_ptr client_impl::create_device(const std::string &group, const std::string &name)
 {
-    device_info info {};
     device::s_ptr dev;
-    std::string base_topic = "pza/" + group + "/" + name;
     json_attribute json("info");
-    auto device_payload = _devices_scanned[base_topic];
+    device_info info{};
+    auto combined = group + "/" + name;
 
-    if (json.parse(device_payload) < 0) {
-        spdlog::error("failed to parse device info for device {}", name);
-        return nullptr;
-    }
+    auto elem = _devices_scanned.at(combined);
 
-    if (scan_device(group, name) < 0) {
-        spdlog::error("failed to scan device {}", name);
+    if (json.parse(elem) < 0) {
+        spdlog::error("failed to parse device info for device {}", combined);
         return nullptr;
     }
     
     if (json.get_unsigned_int("number_of_interfaces", info.number_of_interfaces) < 0) {
-        spdlog::error("failed to parse device info: {}", _devices_scanned[base_topic]);
+        spdlog::error("failed to parse number of interfaces for device {}", combined);
         return nullptr;
     }
 
@@ -348,8 +348,81 @@ device::s_ptr client_impl::register_device(const std::string &group, const std::
         spdlog::error("failed to create device: {}", exc.what());
         return nullptr;
     }
-    _devices[group + "/" + name] = dev;
+    _devices[combined] = dev;
     return dev;
+}
+
+device::s_ptr client_impl::register_device(const std::string &group, const std::string &name, unsigned int timeout_ms)
+{
+    if (scan_device(group, name, timeout_ms) < 0) {
+        spdlog::error("failed to scan device {}", name);
+        return nullptr;
+    }
+    return create_device(group, name);
+}
+
+int client_impl::register_devices(unsigned int timeout_ms)
+{
+    int ret = 0;
+    device_info info;
+
+    if (scan_platforms(timeout_ms) < 0) {
+        spdlog::error("failed to scan platforms.");
+        return -1;
+    }
+    if (scan_devices(timeout_ms) < 0) {
+        spdlog::error("failed to scan devices.");
+        return -1;
+    }
+    for (auto const &elem : _devices_scanned) {
+        auto group = elem.first.substr(0, elem.first.find('/'));
+        auto name = elem.first.substr(elem.first.find('/') + 1);
+        if (create_device(group, name) == nullptr) {
+            spdlog::error("failed to create device {}", elem.first);
+            ret = -1;
+        }
+    }
+    return ret;
+}
+
+device::s_ptr client_impl::get_device(const std::string &group, const std::string &name) const
+{
+    auto combined = group + "/" + name;
+
+    if (_devices.count(combined) == 0)
+        return nullptr;
+    return _devices.at(combined);
+}
+
+std::vector<device::s_ptr> client_impl::get_devices() const
+{
+    std::vector<device::s_ptr> ret;
+
+    for (auto const &elem : _devices) {
+        ret.push_back(elem.second);
+    }
+    return ret;
+}
+
+std::vector<device::s_ptr> client_impl::get_devices_in_group(const std::string &group) const
+{
+    std::vector<device::s_ptr> ret;
+
+    for (auto const &elem : _devices) {
+        if (elem.second->get_group() == group)
+            ret.push_back(elem.second);
+    }
+    return ret;
+}
+
+std::set<std::string> client_impl::get_groups() const
+{
+    std::set<std::string> groups;
+
+    for (auto const &elem : _devices) {
+        groups.insert(elem.second->get_group());
+    }
+    return groups;
 }
 
 client::client(const std::string &addr, int port, std::optional<std::string> id)
@@ -393,17 +466,42 @@ int client::get_port(void) const
     return _impl->get_port();
 }
 
-void client::set_conn_timeout(int timeout)
+void client::set_connection_timeout(unsigned int timeout)
 {
-    _impl->set_conn_timeout(timeout);
+    _impl->set_connection_timeout(timeout);
 }
 
-int client::get_conn_timeout(void) const
+unsigned int client::get_connection_timeout(void) const
 {
-    return _impl->get_conn_timeout();
+    return _impl->get_connection_timeout();
 }
 
-device::s_ptr client::register_device(const std::string &group, const std::string &name)
+device::s_ptr client::register_device(const std::string &group, const std::string &name, unsigned int timeout_ms)
 {
-    return _impl->register_device(group, name);
+    return _impl->register_device(group, name, timeout_ms);
+}
+
+int client::register_devices(unsigned int timeout_ms)
+{
+    return _impl->register_devices(timeout_ms);
+}
+
+device::s_ptr client::get_device(const std::string &group, const std::string &name) const
+{
+    return _impl->get_device(group, name);
+}
+
+std::vector<device::s_ptr> client::get_devices() const
+{
+    return _impl->get_devices();
+}
+
+std::vector<device::s_ptr> client::get_devices_in_group(const std::string &group) const
+{
+    return _impl->get_devices_in_group(group);
+}
+
+std::set<std::string> client::get_groups() const
+{
+    return _impl->get_groups();
 }
