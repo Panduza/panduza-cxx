@@ -9,21 +9,12 @@
 #include <nlohmann/json.hpp>
 
 class itf_impl;
-class attribute;
 class mqtt_service;
+class attribute;
+struct itf_info;
 
 namespace pza
 {
-class device;
-
-struct itf_info
-{
-    std::string group;
-    std::string device_name;
-    std::string name;
-    std::string type;
-};
-
 // We can't use the name interface because it's a reserved keyford for Windows C++ (lol)
 class itf_base
 {
@@ -32,7 +23,7 @@ public:
     using u_ptr = std::unique_ptr<itf_base>;
     using w_ptr = std::weak_ptr<itf_base>;
 
-    using attribute_ptr = std::unique_ptr<attribute>;
+    using attribute_ptr = std::shared_ptr<attribute>;
 
     virtual ~itf_base();
     itf_base(const itf_base&) = delete;
@@ -45,8 +36,6 @@ public:
 
 protected:
     explicit itf_base(mqtt_service &mqtt, itf_info &info);
-
-    void register_attributes(const std::list<std::reference_wrapper<attribute>> attributes);
 
     std::unique_ptr<itf_impl> _impl;
 };

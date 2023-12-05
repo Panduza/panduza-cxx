@@ -14,6 +14,8 @@
 class attribute
 {
 public:
+    using s_ptr = std::shared_ptr<attribute>;
+
     explicit attribute(const std::string &name);
     ~attribute();
 
@@ -26,13 +28,19 @@ public:
     }
 
     template<typename T>
-    const T &get_field(const std::string &name)
+    const T &get_field(const std::string &name) 
     {
-        return std::get<T>(_fields[name]);
+        try {
+            return std::get<T>(_fields[name]);
+        }
+        catch (const std::bad_variant_access &e) {
+            spdlog::error("attribute::get_field: {}", e.what());
+            throw;
+        }
     }
 
     template<typename T>
-    int set(const std::string &field, const T &val)
+    int set_field(const std::string &field, const T &val)
     {
         nlohmann::json data;
         std::condition_variable cv;

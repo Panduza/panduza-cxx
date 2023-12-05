@@ -7,6 +7,8 @@
 #include <pza/core/device.hxx>
 #include <pza/core/interface.hxx>
 
+#include "interface.hxx"
+
 using namespace pza;
 
 namespace interface_factory

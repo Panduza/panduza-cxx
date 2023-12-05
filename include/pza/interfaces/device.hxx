@@ -14,9 +14,9 @@ public:
     explicit device(mqtt_service &mqtt, itf_info &info);
     ~device();
 
-    std::string get_model();
-    std::string get_manufacturer();
-    std::string get_family();
+    const std::string &get_model();
+    const std::string &get_manufacturer();
+    const std::string &get_family();
 
 private:
     attribute_ptr _identity;

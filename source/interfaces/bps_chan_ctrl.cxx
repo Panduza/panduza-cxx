@@ -1,15 +1,17 @@
 #include <pza/interfaces/bps_chan_ctrl.hxx>
 
-#include "../core/attribute.hxx"
+#include "../core/interface.hxx"
 
 using namespace pza::itf;
 
 bps_chan_ctrl::bps_chan_ctrl(mqtt_service &mqtt, itf_info &info)
     : itf_base(mqtt, info)
 {
-    _voltage = std::make_unique<attribute>("voltage");
-    _current = std::make_unique<attribute>("current");
-    _enable = std::make_unique<attribute>("enable");
+    _enable = std::make_shared<attribute>("enable");
+    _voltage = std::make_shared<attribute>("voltage");
+    _current = std::make_shared<attribute>("current");
+
+    _enable->register_field<bool>("value");
 
     _voltage->register_field<double>("value");
     _voltage->register_field<double>("min");
@@ -21,9 +23,7 @@ bps_chan_ctrl::bps_chan_ctrl(mqtt_service &mqtt, itf_info &info)
     _current->register_field<double>("max");
     _current->register_field<unsigned int>("decimals");
 
-    _enable->register_field<bool>("value");
-
-    register_attributes({*_voltage, *_current, *_enable});
+    _impl->register_attributes({_enable, _voltage, _current});
 }
 
 bps_chan_ctrl::~bps_chan_ctrl()
@@ -33,17 +33,17 @@ bps_chan_ctrl::~bps_chan_ctrl()
 
 int bps_chan_ctrl::set_voltage(double volts)
 {
-    return _voltage->set<double>("value", volts);
+    return _voltage->set_field<double>("value", volts);
 }
 
 int bps_chan_ctrl::set_current(double amps)
 {
-    return _current->set<double>("value", amps);
+    return _current->set_field<double>("value", amps);
 }
 
 int bps_chan_ctrl::set_enable(bool enable)
 {
-    return _enable->set<bool>("value", enable);
+    return _enable->set_field<bool>("value", enable);
 }
 
 bool bps_chan_ctrl::get_enable()

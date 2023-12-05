@@ -174,8 +174,6 @@ int client_impl::unsubscribe(const std::string &topic)
 {
     std::string t;
 
-    spdlog::trace("CUCU");
-
     if (_paho_client->unsubscribe(topic)->wait_for(std::chrono::seconds(_conn_timeout)) == false) {
         spdlog::error("failed to unsubscribe from topic: {} on client {}", topic, _id);
         return -1;
