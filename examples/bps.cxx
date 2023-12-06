@@ -6,6 +6,7 @@
 
 #include <pza/interfaces/device.hxx>
 #include <pza/interfaces/voltmeter.hxx>
+#include <pza/interfaces/ammeter.hxx>
 #include <pza/interfaces/bps_chan_ctrl.hxx>
 
 #include <spdlog/spdlog.h>
@@ -33,21 +34,22 @@ int main()
         spdlog::info("interface: {}", itf);
     }
 
-    auto vm = std::dynamic_pointer_cast<pza::itf::bps_chan_ctrl>(dev->get_interface("channel", 0, "ctrl"));
+    auto ctrl = std::dynamic_pointer_cast<pza::itf::bps_chan_ctrl>(dev->get_interface("channel", 0, "ctrl"));
+    auto vm = std::dynamic_pointer_cast<pza::itf::voltmeter>(dev->get_interface("channel", 0, "vm"));
+    auto am = std::dynamic_pointer_cast<pza::itf::ammeter>(dev->get_interface("channel", 0, "am"));
 
-    if (vm) {
-        spdlog::info("voltmeter found");
-        spdlog::info("min voltage: {}", vm->get_min_voltage());
-        spdlog::info("max voltage: {}", vm->get_max_voltage());
-        spdlog::info("num decimals: {}", vm->get_num_decimals_voltage());
-    }
-    else {
+
+    if (!ctrl) {
         spdlog::error("voltmeter not found");
         return -1;
     }
 
-    vm->set_voltage(8);
+    double i = 0.0;
 
+    while (true){
+
+    ctrl->set_enable(!ctrl->get_enable());
+    }
     return 0;
 
 }

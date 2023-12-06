@@ -43,7 +43,6 @@ public:
     int set_field(const std::string &field, const T &val)
     {
         nlohmann::json data;
-        std::condition_variable cv;
         std::mutex mtx;
         std::unique_lock<std::mutex> lock(mtx);
 
@@ -54,7 +53,9 @@ public:
             return -1;
         }
 
-        if (cv.wait_for(lock, std::chrono::seconds(2), [&]() { return std::get<T>(_fields[field]) == val; }) == false) {
+        if (_cv.wait_for(lock, std::chrono::seconds(3), [&]() {
+            return std::get<T>(_fields[field]) == val; }) == false)
+        {
             spdlog::error("attribute::set: timed out waiting for value to be set");
             return -1;
         }
@@ -86,4 +87,5 @@ private:
     std::unordered_map<std::string, field_types> _fields;
     std::list<std::function<void(void)>> _callbacks;
     std::function<int(const nlohmann::json &data)> _msg_cb;
+    std::condition_variable _cv;
 };

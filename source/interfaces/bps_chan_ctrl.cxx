@@ -33,11 +33,25 @@ bps_chan_ctrl::~bps_chan_ctrl()
 
 int bps_chan_ctrl::set_voltage(double volts)
 {
+    auto min = _voltage->get_field<double>("min");
+    auto max = _voltage->get_field<double>("max");
+
+    if (volts < min || volts > max) {
+        spdlog::error("bps_chan_ctrl::set_voltage: voltage out of range, min: {}, max: {}, value: {}", min, max, volts);
+        return -1;
+    }
     return _voltage->set_field<double>("value", volts);
 }
 
 int bps_chan_ctrl::set_current(double amps)
 {
+    auto min = _current->get_field<double>("min");
+    auto max = _current->get_field<double>("max");
+
+    if (amps < min || amps > max) {
+        spdlog::error("bps_chan_ctrl::set_current: current out of range, min: {}, max: {}, value: {}", min, max, amps);
+        return -1;
+    }
     return _current->set_field<double>("value", amps);
 }
 
@@ -69,6 +83,16 @@ double bps_chan_ctrl::get_min_current()
 double bps_chan_ctrl::get_max_current()
 {
     return _current->get_field<double>("max");
+}
+
+double bps_chan_ctrl::get_present_voltage()
+{
+    return _voltage->get_field<double>("value");
+}
+
+double bps_chan_ctrl::get_present_current()
+{
+    return _current->get_field<double>("value");
 }
 
 unsigned int bps_chan_ctrl::get_num_decimals_voltage()

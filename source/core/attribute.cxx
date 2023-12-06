@@ -44,6 +44,8 @@ void attribute::on_message(mqtt::const_message_ptr msg)
         }
     }
 
+    _cv.notify_all();
+
     for (auto &cb : _callbacks) {
         cb();
     }
