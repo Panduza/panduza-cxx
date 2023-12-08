@@ -1,7 +1,5 @@
 include_guard()
 
-add_compile_options(-Wall -Wextra)
-
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--allow-multiple-definition")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--allow-multiple-definition")

@@ -19,9 +19,6 @@ class PzaCxx(ConanFile):
         self.requires("paho-mqtt-cpp/[>=1.2.0]")
         self.requires("spdlog/[>=1.12.0]")
         self.requires("nlohmann_json/[>=3.11.2]")
-        if self.settings.os == "Linux":
-            self.requires("gtest/[>=1.14.0]")
-            self.requires("cppcheck/[>=2.12.1]")
 
     def layout(self):
         self.folders.build_folder_vars = ['settings.os', 'settings.compiler', 'options.shared']

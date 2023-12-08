@@ -37,8 +37,3 @@ cmake --build --preset linux-gcc-static-release
 cmake --preset linux-clang-static
 cmake --build --preset linux-clang-static-debug
 cmake --build --preset linux-clang-static-release
-
-
-
-
-

@@ -1,0 +1,11 @@
+---
+Checks:
+    clang-diagnostic-*,
+    clang-analyzer-*,
+    cppcoreguidelines-*,
+    modernize-*,
+    -modernize-use-trailing-return-type,
+    -cppcoreguidelines-non-private-member-variables-in-classes
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+---
