@@ -1,0 +1,29 @@
+#include <pza/core/core.hxx>
+
+namespace pza::core
+{
+    std::string get_version()
+    {
+        return "@PZACXX_VERSION@";
+    }
+
+    std::string get_version_githash()
+    {
+        return "@PZACXX_VERSION_GITHASH@";
+    }
+
+    unsigned int get_version_major()
+    {
+        return @PZACXX_VERSION_MAJOR@;
+    }
+
+    unsigned int get_version_minor()
+    {
+        return @PZACXX_VERSION_MINOR@ +0;
+    }
+
+    unsigned int get_version_patch()
+    {
+        return @PZACXX_VERSION_PATCH@ +0;
+    }
+}

@@ -2,6 +2,9 @@ build*
 examples/build*
 examples/CMakeUserPresets.json
 CMakeUserPresets.json
+ConanPresets.json
 .vscode
 Testing
 conan_imports_manifest.txt
+*.swp
+*.swo

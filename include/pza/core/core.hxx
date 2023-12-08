@@ -2,13 +2,10 @@
 
 #include <spdlog/spdlog.h>
 
-#include "version.hxx"
-
 namespace pza
 {
-class core
+namespace core
 {
-public:
     enum class log_level : int
     {
         trace = spdlog::level::trace,
@@ -20,15 +17,13 @@ public:
         off = spdlog::level::off
     };
 
-    core() = delete;
-    ~core() = delete;
-    core(const core&) = delete;
-    core(core&&) = delete;
-    core& operator=(const core&) = delete;
-    core& operator=(core&&) = delete;
-
-    static void set_log_level(log_level level);
-    static log_level get_log_level(void);
-    static std::string get_version(void);
+    void set_log_level(pza::core::log_level level);
+    pza::core::log_level get_log_level(void);
+    
+    std::string get_version();
+    std::string get_version_githash();
+    unsigned int get_version_major();
+    unsigned int get_version_minor();
+    unsigned int get_version_patch();
 };
 };

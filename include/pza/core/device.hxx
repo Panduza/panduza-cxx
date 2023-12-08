@@ -5,7 +5,7 @@
 
 #include <pza/core/interface.hxx>
 
-class device_impl;
+struct device_impl;
 class mqtt_service;
 
 struct device_info;
@@ -30,10 +30,23 @@ public:
     const std::string &get_manufacturer() const;
     const std::string &get_family() const;
 
-    int get_number_of_interfaces() const;
+    unsigned int get_number_of_interfaces() const;
     
     itf_base::s_ptr get_interface(const std::string &name) const;
+
+    template<typename T>
+    std::shared_ptr<T> get_interface(const std::string &name) const
+    {
+        return std::dynamic_pointer_cast<T>(get_interface(name));
+    }
+
     itf_base::s_ptr get_interface(const std::string &interface_group, unsigned int idx, const std::string &name) const;
+
+    template<typename T>
+    std::shared_ptr<T> get_interface(const std::string &interface_group, unsigned int idx, const std::string &name) const
+    {
+        return std::dynamic_pointer_cast<T>(get_interface(interface_group, idx, name));
+    }
 
     std::vector<std::string> get_interface_names() const;
 

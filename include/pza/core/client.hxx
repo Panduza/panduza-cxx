@@ -7,7 +7,7 @@
 
 #include <pza/core/device.hxx>
 
-class client_impl;
+struct client_impl;
 
 namespace pza
 {
@@ -32,16 +32,28 @@ public:
     void set_connection_timeout(unsigned int timeout_ms);
     unsigned int get_connection_timeout(void) const;
 
-    int scan_platforms(unsigned int timeout_ms = platforms_timeout_default);
-
     device::s_ptr register_device(const std::string &group, const std::string &name, unsigned int timeout_ms = device_timeout_default);
     int register_devices(unsigned int timeout_ms = device_timeout_default * 5);
 
     device::s_ptr get_device(const std::string &group, const std::string &name) const;
     std::vector<device::s_ptr> get_devices() const;
     std::vector<device::s_ptr> get_devices_in_group(const std::string &group) const;
-
     std::set<std::string> get_groups() const;
+
+    itf_base::s_ptr get_interface(const std::string &group, const std::string &name, const std::string &interface_group, unsigned int idx, const std::string &interface_name) const;
+    itf_base::s_ptr get_interface(const std::string &group, const std::string &name, const std::string &interface_name) const;
+
+    template<typename T>
+    std::shared_ptr<T> get_interface(const std::string &group, const std::string &name, const std::string &interface_group, unsigned int idx, const std::string &interface_name) const
+    {
+        return std::dynamic_pointer_cast<T>(get_interface(group, name, interface_group, idx, interface_name));
+    }
+
+    template<typename T>
+    std::shared_ptr<T> get_interface(const std::string &group, const std::string &name, const std::string &interface_name) const
+    {
+        return std::dynamic_pointer_cast<T>(get_interface(group, name, interface_name));
+    }
 
 private:
     static constexpr unsigned int platforms_timeout_default = 500;

@@ -8,7 +8,7 @@
 
 #include <nlohmann/json.hpp>
 
-class itf_impl;
+struct itf_impl;
 class mqtt_service;
 class attribute;
 struct itf_info;

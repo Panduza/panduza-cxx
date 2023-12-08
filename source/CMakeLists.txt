@@ -1,7 +1,5 @@
-file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/source/*.hxx)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.hxx.in 
-               ${CMAKE_CURRENT_BINARY_DIR}/version.hxx)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/core/version.cxx.in
+               ${CMAKE_CURRENT_BINARY_DIR}/version.cxx)
 
 target_sources(${LIBRARY_NAME}
     PRIVATE
@@ -23,14 +21,6 @@ target_sources(${LIBRARY_NAME}
     interfaces/voltmeter.cxx
     interfaces/ammeter.cxx
     interfaces/bps_chan_ctrl.cxx
-)
 
-target_include_directories(${LIBRARY_NAME} PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ../include
-)
-
-install(TARGETS ${LIBRARY_NAME}
-    FILE_SET HEADERS
+    ${CMAKE_CURRENT_BINARY_DIR}/version.cxx
 )

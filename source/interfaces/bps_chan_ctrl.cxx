@@ -28,7 +28,6 @@ bps_chan_ctrl::bps_chan_ctrl(mqtt_service &mqtt, itf_info &info)
 
 bps_chan_ctrl::~bps_chan_ctrl()
 {
-    spdlog::trace("bps_chan_ctrl::~bps_chan_ctrl");
 }
 
 int bps_chan_ctrl::set_voltage(double volts)
@@ -85,12 +84,12 @@ double bps_chan_ctrl::get_max_current()
     return _current->get_field<double>("max");
 }
 
-double bps_chan_ctrl::get_present_voltage()
+double bps_chan_ctrl::get_preset_voltage()
 {
     return _voltage->get_field<double>("value");
 }
 
-double bps_chan_ctrl::get_present_current()
+double bps_chan_ctrl::get_preset_current()
 {
     return _current->get_field<double>("value");
 }

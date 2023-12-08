@@ -503,3 +503,19 @@ std::set<std::string> client::get_groups() const
 {
     return _impl->get_groups();
 }
+
+itf_base::s_ptr client::get_interface(const std::string &group, const std::string &name, const std::string &interface_group, unsigned int idx, const std::string &interface_name) const
+{
+    auto dev = _impl->get_device(group, name);
+    if (dev == nullptr)
+        return nullptr;
+    return dev->get_interface(interface_group, idx, interface_name);
+}
+
+itf_base::s_ptr client::get_interface(const std::string &group, const std::string &name, const std::string &interface_name) const
+{
+    auto dev = _impl->get_device(group, name);
+    if (dev == nullptr)
+        return nullptr;
+    return dev->get_interface(interface_name);
+}

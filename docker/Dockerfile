@@ -9,15 +9,15 @@ RUN pacman -Sy --noconfirm \
     python \
     python-pip \
     wget \
-    clang \
     libunwind \
-    wine
+    wine \
+    gcc \
+    clang
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install conan==2.0.13
-RUN conan profile new default --detect
-RUN conan profile update settings.compiler.libcxx=libstdc++11 default
+RUN conan profile detect
 
 RUN useradd -m mingw && echo "mingw:password" | chpasswd
 RUN echo "mingw ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/myuser
@@ -30,4 +30,5 @@ RUN paru -S --noconfirm mingw-w64-cmake mingw-w64-zstd mingw-w64-zlib
 USER root
 RUN ln -s /usr/x86_64-w64-mingw32/lib/librpcrt4.a /usr/x86_64-w64-mingw32/lib/libRpcRT4.a
 RUN userdel -r mingw
-WORKDIR /
+
+RUN git config --global --add safe.directory '*'

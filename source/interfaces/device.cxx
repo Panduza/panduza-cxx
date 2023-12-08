@@ -18,7 +18,6 @@ device::device(mqtt_service &mqtt, itf_info &info)
 
 device::~device()
 {
-    spdlog::info("device::~device");
 }
 
 const std::string &device::get_model(void)

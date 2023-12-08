@@ -1,3 +1,5 @@
+include_guard()
+
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_program(CPPCHECK_EXECUTABLE cppcheck)
     if(CPPCHECK_EXECUTABLE)

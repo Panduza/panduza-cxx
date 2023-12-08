@@ -74,7 +74,6 @@ device_impl::device_impl(mqtt_service &mqtt, const struct device_info &info)
 
 device_impl::~device_impl()
 {
-    spdlog::trace("device_impl::~device_impl");
 }
 
 void device_impl::on_interface_info(mqtt::const_message_ptr msg)
@@ -173,7 +172,6 @@ device::device(mqtt_service &mqtt, struct device_info &info)
 
 device::~device()
 {
-    spdlog::trace("device::~device");
 }
 
 const std::string &device::get_name() const
@@ -201,7 +199,7 @@ const std::string &device::get_family() const
     return _impl->info.family;
 }
 
-int device::get_number_of_interfaces() const
+unsigned int device::get_number_of_interfaces() const
 {
     return _impl->get_number_of_interfaces();
 }

@@ -84,7 +84,6 @@ itf_base::itf_base(mqtt_service &mqtt, itf_info &info)
 
 itf_base::~itf_base()
 {
-    spdlog::trace("itf_base::~itf_base");
 }
 
 const std::string &itf_base::get_name() const

@@ -23,8 +23,8 @@ public:
     double get_max_voltage();
     double get_min_current();
     double get_max_current();
-    double get_present_voltage();
-    double get_present_current();
+    double get_preset_voltage();
+    double get_preset_current();
     unsigned int get_num_decimals_voltage();
     unsigned int get_num_decimals_current();
 

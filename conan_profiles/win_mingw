@@ -1,0 +1,19 @@
+[buildenv]
+AR=x86_64-w64-mingw32-ar
+AS=x86_64-w64-mingw32-as
+RANLIB=x86_64-w64-mingw32-ranlib
+CC=x86_64-w64-mingw32-gcc
+CXX=x86_64-w64-mingw32-g++
+STRIP=x86_64-w64-mingw32-strip
+RC=x86_64-w64-mingw32-windres
+
+[settings]
+os=Windows
+arch=x86_64
+compiler=gcc
+compiler.version=12
+compiler.libcxx=libstdc++11
+compiler.cppstd=17
+
+[conf]
+tools.build:compiler_executables={"c": "x86_64-w64-mingw32-gcc", "cpp": "x86_64-w64-mingw32-g++"}

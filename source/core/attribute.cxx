@@ -8,7 +8,6 @@ attribute::attribute(const std::string &name)
 
 attribute::~attribute()
 {
-    spdlog::debug("attribute::~attribute: {}", _name);
 }
 
 void attribute::on_message(mqtt::const_message_ptr msg)
