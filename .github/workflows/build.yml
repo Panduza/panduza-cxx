@@ -1,0 +1,35 @@
+name: CI Workflow
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/panduza/pzacxx-build-img:latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - if: ${{ env.ACT }}
+      name: Hack container for local development
+      run:
+          pacman -S --noconfirm nodejs
+
+    - name: Cache Conan
+      id: cache-conan
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan2
+        key: conan-cache
+
+    - name: 
+      if: steps.cache-conan.outputs.cache-hit != 'true'
+      run: 
+        conan install -pr:b ./conan_profiles/linux_gcc -pr:h ./conan_profiles/linux_gcc --build=missing -s build_type=Debug -o shared=False .
+    
+
+    - name: Install dependencies and build (Debug, Static)
+      run: |
+        echo "Building Debug, Static"

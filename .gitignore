@@ -1,4 +1,4 @@
-build*
+build/*
 examples/build*
 examples/CMakeUserPresets.json
 CMakeUserPresets.json
@@ -7,4 +7,3 @@ ConanPresets.json
 Testing
 conan_imports_manifest.txt
 *.swp
-*.swo
