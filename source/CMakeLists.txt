@@ -2,7 +2,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/core/version.cxx.in
                ${CMAKE_CURRENT_BINARY_DIR}/version.cxx)
 
 target_sources(${LIBRARY_NAME}
-    PUBLIC 
+    PRIVATE 
 
     core/core.cxx
     core/client.cxx

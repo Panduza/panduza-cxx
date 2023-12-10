@@ -19,11 +19,11 @@ namespace pza::core
 
     unsigned int get_version_minor()
     {
-        return @PZACXX_VERSION_MINOR@ +0;
+        return @PZACXX_VERSION_MINOR@;
     }
 
     unsigned int get_version_patch()
     {
-        return @PZACXX_VERSION_PATCH@ +0;
+        return @PZACXX_VERSION_PATCH@;
     }
 }

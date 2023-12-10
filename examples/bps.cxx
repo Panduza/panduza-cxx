@@ -11,6 +11,8 @@ int main()
 {
 	pza::core::set_log_level(pza::core::log_level::debug);
 
+	pza::core::get_log_level();
+
 	pza::client::s_ptr cli = std::make_shared<pza::client>(addr, port);
 
 	if (cli->connect() < 0)

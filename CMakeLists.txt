@@ -9,9 +9,8 @@ set(LIBRARY_NAME pzacxx)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(cmake/tidy.cmake)
-include(cmake/format.cmake)
 include(cmake/compiler.cmake)
+include(cmake/format.cmake)
 include(cmake/lib.cmake)
 
 find_package(spdlog REQUIRED)
@@ -24,7 +23,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(source)
 
-option(BUILD_EXAMPLES "Build examples" OFF)
-if (BUILD_EXAMPLES)
+option(WITH_EXAMPLES "Build examples" OFF)
+if (WITH_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+option(WITH_TESTS "Build tests" OFF)
+if (WITH_TESTS)
+    enable_testing()
+    add_subdirectory(test)
 endif()

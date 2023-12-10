@@ -18,9 +18,9 @@ public:
 	device &operator=(device &&) = delete;
 	~device() override;
 
-	const std::string &get_model();
-	const std::string &get_manufacturer();
-	const std::string &get_family();
+	[[nodiscard]] const std::string &get_model() const;
+	[[nodiscard]] const std::string &get_manufacturer() const;
+	[[nodiscard]] const std::string &get_family() const;
 
 private:
 	attribute_ptr _identity;

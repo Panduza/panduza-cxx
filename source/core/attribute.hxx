@@ -61,7 +61,7 @@ public:
 
 	void on_message(mqtt::const_message_ptr msg);
 
-	void register_callback(const std::function<void(void)> &cb);
+	void register_callback(const std::function<void(void)> &cb) { _callbacks.push_back(cb); }
 	void remove_callback(const std::function<void(void)> &cb);
 
 	void set_msg_callback(const std::function<int(const nlohmann::json &data)> &cb) { _msg_cb = cb; }

@@ -7,19 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/panduza/pzacxx-build-img:latest
-      options: --user 1001
     strategy:
+      fail-fast: false
       matrix:
-        os: [linux]
-        compiler: [gcc]
-        build_type: [Debug]
-        shared: ["True", "False"]
+        os: [linux, windows]
+        compiler: [gcc, clang]
+        build_type: [debug, release]
+        lib_type: [shared, static]
         exclude:
-          - os: linux
-            compiler: mingw
-          - os: win
-            compiler: gcc
-          - os: win
+          - os: windows
             compiler: clang
     steps:
     - name: Checkout
@@ -30,23 +26,41 @@ jobs:
       run: pacman -S --noconfirm nodejs
 
     - name: "cache"
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.conan2/p
-        key: conan-cache-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ matrix.shared }}
+        key: conan-cache-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ matrix.lib_type }}
 
-    - name: "Install"
-      run:
-        conan install -pr:b ./conan_profiles/linux_gcc -pr:h ./conan_profiles/${{ matrix.os }}_${{ matrix.compiler }} --build=missing -s build_type=${{ matrix.build_type }} -o shared=${{ matrix.shared }} .
+    - id: build_type
+      uses: ASzc/change-string-case-action@v6
+      with:
+        string: ${{ matrix.build_type }}
 
-    - name: "Build"
+    - name: "Install dependencies"
       run: |
-        if [ "${{ matrix.shared }}" = "True" ]; then
-          lib_type="shared"
+        if [ "${{ matrix.lib_type }}" = "static" ]; then
+          shared="False"
         else
-          lib_type="static"
+          shared="True"
         fi
-        ls -l build
-        echo "build folder: ./build/${{ matrix.os }}-${{ matrix.compiler }}-$lib_type"
-        cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-$lib_type
-        cmake --build ./build/${{ matrix.os }}-${{ matrix.compiler }}-$lib_type --config ${{ matrix.build_type }}
+        conan install -pr:b ./conan_profiles/linux_gcc -pr:h ./conan_profiles/${{ matrix.os }}_${{ matrix.compiler }} --build=missing -s build_type=${{ steps.build_type.outputs.capitalized }} -o shared=$shared .
+
+    - name: "Build for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+      run: |
+        if [ "${{ matrix.compiler }}" = "clang" ] && [ "${{ matrix.build_type }}" = "debug" ] && [ "${{ matrix.lib_type }}" = "shared" ]; then
+          tidy="True"
+        else
+          tidy="False"
+        fi
+        cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} -DWITH_TIDY=$tidy 
+        cmake --build --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}
+
+    - name: "Test for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+      run: |
+        echo "Test for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+
+
+    - name: "Coverage"
+      if: ${{ matrix.os == 'linux' && matrix.compiler == 'gcc' && matrix.build_type == 'debug' && matrix.lib_type == 'static' }}
+      run: |
+        echo "Coverage for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"

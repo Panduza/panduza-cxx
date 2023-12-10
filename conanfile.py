@@ -7,12 +7,10 @@ class PzaCxx(ConanFile):
     name = "libpza-cxx"
     settings = "os", "compiler", "build_type", "arch"
     options = {
-        "shared": [True, False],
-        "build_examples": [True, False]
+        "shared": [True, False]
     }
     default_options = {
-        "shared": True,
-        "build_examples": True
+        "shared": True
     }
 
     def requirements(self):
@@ -32,7 +30,6 @@ class PzaCxx(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
         tc.generator = "Ninja Multi-Config"
-        tc.variables["BUILD_EXAMPLES"] = self.options.build_examples
         tc.filename = "pzacxx_toolchain.cmake"
         tc.user_presets_path = 'ConanPresets.json'
         tc.presets_prefix = ""

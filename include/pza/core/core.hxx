@@ -14,8 +14,8 @@ enum class log_level : int {
 	off = spdlog::level::off
 };
 
-void set_log_level(pza::core::log_level level);
-pza::core::log_level get_log_level();
+void set_log_level(log_level level);
+log_level get_log_level();
 
 std::string get_version();
 std::string get_version_githash();

@@ -42,8 +42,6 @@ void attribute::on_message(mqtt::const_message_ptr msg)
 	}
 }
 
-void attribute::register_callback(const std::function<void(void)> &cb) { _callbacks.push_back(cb); }
-
 void attribute::remove_callback(const std::function<void(void)> &cb)
 {
 	_callbacks.remove_if([&](const std::function<void(void)> &f) {

@@ -31,4 +31,4 @@ USER root
 RUN ln -s /usr/x86_64-w64-mingw32/lib/librpcrt4.a /usr/x86_64-w64-mingw32/lib/libRpcRT4.a
 RUN userdel -r mingw
 
-RUN git config --global --add safe.directory '*'
+RUN git config --system --add safe.directory '*'

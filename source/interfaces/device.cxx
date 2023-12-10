@@ -18,8 +18,8 @@ device::device(mqtt_service *mqtt, itf_info &info)
 
 device::~device() = default;
 
-const std::string &device::get_model() { return _identity->get_field<std::string>("model"); }
+const std::string &device::get_model() const { return _identity->get_field<std::string>("model"); }
 
-const std::string &device::get_manufacturer() { return _identity->get_field<std::string>("manufacturer"); }
+const std::string &device::get_manufacturer() const { return _identity->get_field<std::string>("manufacturer"); }
 
-const std::string &device::get_family() { return _identity->get_field<std::string>("family"); }
+const std::string &device::get_family() const { return _identity->get_field<std::string>("family"); }
