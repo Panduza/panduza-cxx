@@ -15,7 +15,7 @@ public:
 	using u_ptr = std::unique_ptr<meter>;
 	using w_ptr = std::weak_ptr<meter>;
 
-	explicit meter(mqtt_service &mqtt, itf_info &info);
+	explicit meter(mqtt_service *mqtt, itf_info &info);
 	meter(const meter &) = delete;
 	meter(meter &&) = delete;
 	meter &operator=(const meter &) = delete;

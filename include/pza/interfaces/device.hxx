@@ -11,7 +11,7 @@ public:
 	using u_ptr = std::unique_ptr<device>;
 	using w_ptr = std::weak_ptr<device>;
 
-	explicit device(mqtt_service &mqtt, itf_info &info);
+	explicit device(mqtt_service *mqtt, itf_info &info);
 	device(const device &) = delete;
 	device(device &&) = delete;
 	device &operator=(const device &) = delete;

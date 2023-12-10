@@ -4,7 +4,8 @@
 
 using namespace pza::itf;
 
-ammeter::ammeter(mqtt_service &mqtt, itf_info &info) : meter(mqtt, info)
+ammeter::ammeter(mqtt_service *mqtt, itf_info &info)
+    : meter(mqtt, info)
 {
 }
 

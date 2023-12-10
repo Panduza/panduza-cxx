@@ -4,7 +4,8 @@
 
 using namespace pza::itf;
 
-voltmeter::voltmeter(mqtt_service &mqtt, itf_info &info) : meter(mqtt, info)
+voltmeter::voltmeter(mqtt_service *mqtt, itf_info &info)
+    : meter(mqtt, info)
 {
 }
 

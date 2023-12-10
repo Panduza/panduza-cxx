@@ -36,7 +36,7 @@ public:
 	[[nodiscard]] const std::string &get_type() const;
 
 protected:
-	explicit itf_base(mqtt_service &mqtt, itf_info &info);
+	explicit itf_base(mqtt_service *mqtt, itf_info &info);
 
 	std::unique_ptr<itf_impl> _impl;
 };

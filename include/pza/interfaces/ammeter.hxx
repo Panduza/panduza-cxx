@@ -11,7 +11,7 @@ public:
 	using u_ptr = std::unique_ptr<ammeter>;
 	using w_ptr = std::weak_ptr<ammeter>;
 
-	explicit ammeter(mqtt_service &mqtt, itf_info &info);
+	explicit ammeter(mqtt_service *mqtt, itf_info &info);
 	ammeter(const ammeter &) = delete;
 	ammeter(ammeter &&) = delete;
 	ammeter &operator=(const ammeter &) = delete;

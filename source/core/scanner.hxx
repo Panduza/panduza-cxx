@@ -10,15 +10,14 @@
 class scanner
 {
 public:
-	explicit scanner(mqtt_service &mqtt);
+	explicit scanner(mqtt_service *mqtt);
 
 	scanner &set_scan_timeout_ms(unsigned int timeout)
 	{
 		_scan_timeout = timeout;
 		return *this;
 	}
-	scanner &set_message_callback(
-	    const std::function<void(mqtt::const_message_ptr)> &cb)
+	scanner &set_message_callback(const std::function<void(mqtt::const_message_ptr)> &cb)
 	{
 		_message_cb = cb;
 		return *this;
@@ -43,7 +42,7 @@ public:
 private:
 	static constexpr unsigned int _scan_timeout_default = 3; // in seconds
 	unsigned int _scan_timeout = _scan_timeout_default;
-	mqtt_service &_mqtt;
+	mqtt_service *_mqtt;
 	std::function<void(mqtt::const_message_ptr)> _message_cb;
 	std::function<bool()> _condition_cb;
 	std::condition_variable _cv;

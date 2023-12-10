@@ -1,6 +1,7 @@
 #include "topic.hxx"
 
-topic::topic(const std::string &topic) : _topic(topic)
+topic::topic(const std::string &topic)
+    : _topic(topic)
 {
 	std::stringstream strs(topic);
 	std::string buf;
@@ -31,8 +32,7 @@ std::string topic::regexify_topic(const std::string &topic)
 	return t;
 }
 
-bool topic::topic_matches(const std::string &str,
-			  const std::string &fnmatchPattern)
+bool topic::topic_matches(const std::string &str, const std::string &fnmatchPattern)
 {
 	std::string regexPattern = _convertPattern(fnmatchPattern);
 	std::regex pattern(regexPattern);

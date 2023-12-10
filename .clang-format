@@ -4,11 +4,11 @@ TabWidth: 8
 UseTab: Always
 BreakBeforeBraces: Linux
 AllowShortIfStatementsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AllowShortBlocksOnASingleLine: false
 IndentCaseLabels: false
-ColumnLimit: 80
+ColumnLimit: 120
 AccessModifierOffset: -8
 NamespaceIndentation: None 
 PointerAlignment: Right
@@ -16,3 +16,4 @@ AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true
 FixNamespaceComments: false
 AlignAfterOpenBracket: Align
+PackConstructorInitializers: Never

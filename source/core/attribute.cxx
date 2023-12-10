@@ -1,6 +1,7 @@
 #include "attribute.hxx"
 
-attribute::attribute(std::string name) : _name(std::move(name))
+attribute::attribute(std::string name)
+    : _name(std::move(name))
 {
 }
 
@@ -30,8 +31,7 @@ void attribute::on_message(mqtt::const_message_ptr msg)
 		} else if (std::holds_alternative<bool>(type)) {
 			_set_field<bool>(json, name);
 		} else {
-			spdlog::error(
-			    "attribute::on_message: unknown field type");
+			spdlog::error("attribute::on_message: unknown field type");
 		}
 	}
 
@@ -42,15 +42,11 @@ void attribute::on_message(mqtt::const_message_ptr msg)
 	}
 }
 
-void attribute::register_callback(const std::function<void(void)> &cb)
-{
-	_callbacks.push_back(cb);
-}
+void attribute::register_callback(const std::function<void(void)> &cb) { _callbacks.push_back(cb); }
 
 void attribute::remove_callback(const std::function<void(void)> &cb)
 {
 	_callbacks.remove_if([&](const std::function<void(void)> &f) {
-		return f.target_type() == cb.target_type() &&
-		       f.target<void(void)>() == cb.target<void(void)>();
+		return f.target_type() == cb.target_type() && f.target<void(void)>() == cb.target<void(void)>();
 	});
 }

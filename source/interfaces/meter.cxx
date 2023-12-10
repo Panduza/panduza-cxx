@@ -4,7 +4,8 @@
 
 using namespace pza::itf;
 
-meter::meter(mqtt_service &mqtt, itf_info &info) : itf_base(mqtt, info)
+meter::meter(mqtt_service *mqtt, itf_info &info)
+    : itf_base(mqtt, info)
 {
 	_measure = std::make_shared<attribute>("measure");
 
@@ -15,10 +16,7 @@ meter::meter(mqtt_service &mqtt, itf_info &info) : itf_base(mqtt, info)
 
 meter::~meter() = default;
 
-double meter::get_measure()
-{
-	return _impl->get_attribute("measure").get_field<double>("value");
-}
+double meter::get_measure() { return _impl->get_attribute("measure").get_field<double>("value"); }
 
 void meter::register_measure_callback(const std::function<void()> &callback)
 {

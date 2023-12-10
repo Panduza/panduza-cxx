@@ -4,7 +4,8 @@
 
 using namespace pza::itf;
 
-device::device(mqtt_service &mqtt, itf_info &info) : itf_base(mqtt, info)
+device::device(mqtt_service *mqtt, itf_info &info)
+    : itf_base(mqtt, info)
 {
 	_identity = std::make_shared<attribute>("identity");
 
@@ -17,17 +18,8 @@ device::device(mqtt_service &mqtt, itf_info &info) : itf_base(mqtt, info)
 
 device::~device() = default;
 
-const std::string &device::get_model()
-{
-	return _identity->get_field<std::string>("model");
-}
+const std::string &device::get_model() { return _identity->get_field<std::string>("model"); }
 
-const std::string &device::get_manufacturer()
-{
-	return _identity->get_field<std::string>("manufacturer");
-}
+const std::string &device::get_manufacturer() { return _identity->get_field<std::string>("manufacturer"); }
 
-const std::string &device::get_family()
-{
-	return _identity->get_field<std::string>("family");
-}
+const std::string &device::get_family() { return _identity->get_field<std::string>("family"); }

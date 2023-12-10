@@ -7,29 +7,46 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/panduza/pzacxx-build-img:latest
-
+      options: --user 1001
+    strategy:
+      matrix:
+        os: [linux]
+        compiler: [gcc]
+        build_type: [Debug]
+        shared: ["True", "False"]
+        exclude:
+          - os: linux
+            compiler: mingw
+          - os: win
+            compiler: gcc
+          - os: win
+            compiler: clang
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
     - if: ${{ env.ACT }}
       name: Hack container for local development
-      run:
-          pacman -S --noconfirm nodejs
+      run: pacman -S --noconfirm nodejs
 
-    - name: Cache Conan
-      id: cache-conan
-      uses: actions/cache@v3
+    - name: "cache"
+      uses: actions/cache@v2
       with:
-        path: ~/.conan2
-        key: conan-cache
+        path: ~/.conan2/p
+        key: conan-cache-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ matrix.shared }}
 
-    - name: 
-      if: steps.cache-conan.outputs.cache-hit != 'true'
-      run: 
-        conan install -pr:b ./conan_profiles/linux_gcc -pr:h ./conan_profiles/linux_gcc --build=missing -s build_type=Debug -o shared=False .
-    
+    - name: "Install"
+      run:
+        conan install -pr:b ./conan_profiles/linux_gcc -pr:h ./conan_profiles/${{ matrix.os }}_${{ matrix.compiler }} --build=missing -s build_type=${{ matrix.build_type }} -o shared=${{ matrix.shared }} .
 
-    - name: Install dependencies and build (Debug, Static)
+    - name: "Build"
       run: |
-        echo "Building Debug, Static"
+        if [ "${{ matrix.shared }}" = "True" ]; then
+          lib_type="shared"
+        else
+          lib_type="static"
+        fi
+        ls -l build
+        echo "build folder: ./build/${{ matrix.os }}-${{ matrix.compiler }}-$lib_type"
+        cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-$lib_type
+        cmake --build ./build/${{ matrix.os }}-${{ matrix.compiler }}-$lib_type --config ${{ matrix.build_type }}

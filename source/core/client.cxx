@@ -31,66 +31,38 @@ struct device_info {
 };
 
 struct client_impl : mqtt_service {
-	explicit client_impl(const std::string &addr, int port,
-			     std::optional<std::string> id = std::nullopt);
+	explicit client_impl(const std::string &addr, int port, std::optional<std::string> id = std::nullopt);
 
 	int connect();
 	int disconnect();
-	bool is_connected() const
-	{
-		return (_paho_client->is_connected());
-	}
+	bool is_connected() const { return (_paho_client->is_connected()); }
 
-	const std::string &get_addr() const
-	{
-		return _addr;
-	}
-	const std::string &get_id() const
-	{
-		return _id;
-	}
-	int get_port() const
-	{
-		return _port;
-	}
+	const std::string &get_addr() const { return _addr; }
+	const std::string &get_id() const { return _id; }
+	int get_port() const { return _port; }
 
-	void set_connection_timeout(unsigned int timeout)
-	{
-		_conn_timeout = timeout;
-	}
-	unsigned int get_connection_timeout() const
-	{
-		return _conn_timeout;
-	}
+	void set_connection_timeout(unsigned int timeout) { _conn_timeout = timeout; }
+	unsigned int get_connection_timeout() const { return _conn_timeout; }
 
-	int publish(const std::string &topic,
-		    const std::string &payload) override;
+	int publish(const std::string &topic, const std::string &payload) override;
 	int publish(mqtt::const_message_ptr msg) override;
-	int subscribe(
-	    const std::string &topic,
-	    const std::function<void(mqtt::const_message_ptr)> &cb) override;
+	int subscribe(const std::string &topic, const std::function<void(mqtt::const_message_ptr)> &cb) override;
 	int unsubscribe(const std::string &topic) override;
 
 	void connection_lost(const std::string &cause);
 	void message_arrived(mqtt::const_message_ptr msg);
 
 	int scan_platforms(unsigned int timeout_ms);
-	int scan_device(const std::string &group, const std::string &name,
-			unsigned int timeout_ms);
+	int scan_device(const std::string &group, const std::string &name, unsigned int timeout_ms);
 	int scan_devices(unsigned int timeout_ms);
 
-	device::s_ptr create_device(const std::string &group,
-				    const std::string &name);
-	device::s_ptr register_device(const std::string &group,
-				      const std::string &name,
-				      unsigned int timeout_ms);
+	device::s_ptr create_device(const std::string &group, const std::string &name);
+	device::s_ptr register_device(const std::string &group, const std::string &name, unsigned int timeout_ms);
 	int register_devices(unsigned int timeout_ms);
 
-	device::s_ptr get_device(const std::string &group,
-				 const std::string &name) const;
+	device::s_ptr get_device(const std::string &group, const std::string &name) const;
 	std::vector<device::s_ptr> get_devices() const;
-	std::vector<device::s_ptr>
-	get_devices_in_group(const std::string &group) const;
+	std::vector<device::s_ptr> get_devices_in_group(const std::string &group) const;
 
 	std::set<std::string> get_groups() const;
 
@@ -103,18 +75,16 @@ struct client_impl : mqtt_service {
 	int _port;
 	std::string _id;
 	std::mutex _mtx;
-	std::unordered_map<std::string,
-			   std::function<void(mqtt::const_message_ptr)>>
-	    _listeners;
+	std::unordered_map<std::string, std::function<void(mqtt::const_message_ptr)>> _listeners;
 	std::unordered_map<std::string, device::s_ptr> _devices;
 	std::set<std::string> _platforms_scanned;
 	std::unordered_map<std::string, std::string> _devices_scanned;
 	unsigned int _device_count = 0;
 };
 
-client_impl::client_impl(const std::string &addr, int port,
-			 std::optional<std::string> id)
-    : _addr(addr), _port(port)
+client_impl::client_impl(const std::string &addr, int port, std::optional<std::string> id)
+    : _addr(addr),
+      _port(port)
 
 {
 	std::string url = "tcp://" + addr + ":" + std::to_string(port);
@@ -125,8 +95,7 @@ client_impl::client_impl(const std::string &addr, int port,
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<> dis(0, range);
 		_id = "pza_" + std::to_string(dis(gen));
-		spdlog::warn("no client id provided, using generated id: {}",
-			     _id);
+		spdlog::warn("no client id provided, using generated id: {}", _id);
 	} else
 		_id = id.value();
 
@@ -145,16 +114,12 @@ client_impl::client_impl(const std::string &addr, int port,
 		}
 	};
 
-	auto connection_lost = [&](const std::string &cause) {
-		spdlog::error("connection lost: {}", cause);
-	};
+	auto connection_lost = [&](const std::string &cause) { spdlog::error("connection lost: {}", cause); };
 
 	on_device_info = [&](mqtt::const_message_ptr msg) {
-		std::string base_topic = msg->get_topic().substr(
-		    4, msg->get_topic().find("/device/atts/info") - 4);
+		std::string base_topic = msg->get_topic().substr(4, msg->get_topic().find("/device/atts/info") - 4);
 
-		spdlog::trace("received device info: {} {}", msg->get_topic(),
-			      msg->get_payload_str());
+		spdlog::trace("received device info: {} {}", msg->get_topic(), msg->get_payload_str());
 		_devices_scanned.emplace(base_topic, msg->get_payload_str());
 	};
 
@@ -174,8 +139,7 @@ int client_impl::connect()
 	connOpts.set_keep_alive_interval(interval);
 	connOpts.set_clean_session(true);
 
-	if (_paho_client->connect(connOpts)->wait_for(
-		std::chrono::milliseconds(_conn_timeout)) == false) {
+	if (_paho_client->connect(connOpts)->wait_for(std::chrono::milliseconds(_conn_timeout)) == false) {
 		spdlog::error("failed to connect to client: {}", _id);
 		return -1;
 	}
@@ -188,8 +152,7 @@ int client_impl::disconnect()
 {
 	spdlog::debug("Attempting to disconnect from {}...", _addr);
 
-	if (_paho_client->disconnect()->wait_for(
-		std::chrono::milliseconds(_conn_timeout)) == false) {
+	if (_paho_client->disconnect()->wait_for(std::chrono::milliseconds(_conn_timeout)) == false) {
 		spdlog::error("failed to disconnect from client: {}", _id);
 		return -1;
 	}
@@ -197,10 +160,7 @@ int client_impl::disconnect()
 	return 0;
 }
 
-void client_impl::connection_lost(const std::string &cause)
-{
-	spdlog::error("connection lost: {}", cause);
-}
+void client_impl::connection_lost(const std::string &cause) { spdlog::error("connection lost: {}", cause); }
 
 int client_impl::publish(const std::string &topic, const std::string &payload)
 {
@@ -209,28 +169,22 @@ int client_impl::publish(const std::string &topic, const std::string &payload)
 
 int client_impl::publish(mqtt::const_message_ptr msg)
 {
-	if (_paho_client->publish(msg)->wait_for(
-		std::chrono::milliseconds(msg_timeout_default_ms)) == false) {
+	if (_paho_client->publish(msg)->wait_for(std::chrono::milliseconds(msg_timeout_default_ms)) == false) {
 		spdlog::error("failed to publish from client: {}", _id);
 		return -1;
 	}
-	spdlog::trace("published message {} to {}", msg->get_payload_str(),
-		      msg->get_topic());
+	spdlog::trace("published message {} to {}", msg->get_payload_str(), msg->get_topic());
 	return 0;
 }
 
-int client_impl::subscribe(
-    const std::string &topic,
-    const std::function<void(mqtt::const_message_ptr)> &cb)
+int client_impl::subscribe(const std::string &topic, const std::function<void(mqtt::const_message_ptr)> &cb)
 {
 	std::string t;
 
 	t = topic::regexify_topic(topic);
 	_listeners[t] = cb;
-	if (_paho_client->subscribe(topic, 0)->wait_for(
-		std::chrono::seconds(_conn_timeout)) == false) {
-		spdlog::error("failed to subscribe to topic: {} on client {}",
-			      topic, _id);
+	if (_paho_client->subscribe(topic, 0)->wait_for(std::chrono::seconds(_conn_timeout)) == false) {
+		spdlog::error("failed to subscribe to topic: {} on client {}", topic, _id);
 		_listeners.erase(t);
 		return -1;
 	}
@@ -242,11 +196,8 @@ int client_impl::unsubscribe(const std::string &topic)
 {
 	std::string t;
 
-	if (_paho_client->unsubscribe(topic)->wait_for(
-		std::chrono::seconds(_conn_timeout)) == false) {
-		spdlog::error(
-		    "failed to unsubscribe from topic: {} on client {}", topic,
-		    _id);
+	if (_paho_client->unsubscribe(topic)->wait_for(std::chrono::seconds(_conn_timeout)) == false) {
+		spdlog::error("failed to unsubscribe from topic: {} on client {}", topic, _id);
 		return -1;
 	}
 	spdlog::trace("unsubscribed from topic: {}", topic);
@@ -278,7 +229,7 @@ void client_impl::message_arrived(mqtt::const_message_ptr msg)
 
 int client_impl::scan_platforms(unsigned int timeout_ms)
 {
-	scanner scanner(*this);
+	scanner scanner(this);
 
 	_platforms_scanned.clear();
 
@@ -290,8 +241,7 @@ int client_impl::scan_platforms(unsigned int timeout_ms)
 		json_attribute json("info");
 
 		if (json.parse(payload) < 0) {
-			spdlog::error("failed to parse platform info: {}",
-				      payload);
+			spdlog::error("failed to parse platform info: {}", payload);
 			return;
 		}
 
@@ -299,8 +249,7 @@ int client_impl::scan_platforms(unsigned int timeout_ms)
 			spdlog::error("failed to parse type info: {}", payload);
 			return;
 		}
-		if (type != "platform" ||
-		    _platforms_scanned.find(topic) != _platforms_scanned.end())
+		if (type != "platform" || _platforms_scanned.find(topic) != _platforms_scanned.end())
 			return;
 
 		_platforms_scanned.insert(topic);
@@ -308,8 +257,7 @@ int client_impl::scan_platforms(unsigned int timeout_ms)
 		spdlog::trace("received platform info: {}", payload);
 
 		if (json.get_unsigned_int("number_of_devices", val) < 0) {
-			spdlog::error("failed to parse platform info: {}",
-				      payload);
+			spdlog::error("failed to parse platform info: {}", payload);
 			return;
 		}
 		_device_count += val;
@@ -318,8 +266,7 @@ int client_impl::scan_platforms(unsigned int timeout_ms)
 	scanner.set_scan_timeout_ms(timeout_ms)
 	    .set_message_callback(on_platform_info)
 	    .set_condition_callback([&]() {
-		    std::this_thread::sleep_for(
-			std::chrono::milliseconds(platforms_timeout_ms));
+		    std::this_thread::sleep_for(std::chrono::milliseconds(platforms_timeout_ms));
 		    return true;
 	    })
 	    .set_publisher(mqtt::make_message("pza", "p"))
@@ -335,31 +282,27 @@ int client_impl::scan_platforms(unsigned int timeout_ms)
 		spdlog::error("No devices found on scanned platforms");
 		return -1;
 	}
-	spdlog::info("Found {} platform{} with {} devices",
-		     _platforms_scanned.size(),
+	spdlog::info("Found {} platform{} with {} devices", _platforms_scanned.size(),
 		     _platforms_scanned.size() > 1 ? "s" : "", _device_count);
 	return 0;
 }
 
 int client_impl::scan_devices(unsigned int timeout_ms)
 {
-	scanner scanner(*this);
+	scanner scanner(this);
 
 	_devices_scanned.clear();
 
 	auto on_device_info = [&](mqtt::const_message_ptr msg) {
-		std::string base_topic = msg->get_topic().substr(
-		    4, msg->get_topic().find("/device/atts/info") - 4);
+		std::string base_topic = msg->get_topic().substr(4, msg->get_topic().find("/device/atts/info") - 4);
 
-		spdlog::trace("received device info: {} {}", msg->get_topic(),
-			      msg->get_payload_str());
+		spdlog::trace("received device info: {} {}", msg->get_topic(), msg->get_payload_str());
 		_devices_scanned.emplace(base_topic, msg->get_payload_str());
 	};
 
 	scanner.set_scan_timeout_ms(timeout_ms)
 	    .set_message_callback(on_device_info)
-	    .set_condition_callback(
-		[&]() { return (_device_count == _devices_scanned.size()); })
+	    .set_condition_callback([&]() { return (_device_count == _devices_scanned.size()); })
 	    .set_publisher(mqtt::make_message("pza", "d"))
 	    .set_subscription_topic("pza/+/+/device/atts/info");
 
@@ -370,18 +313,16 @@ int client_impl::scan_devices(unsigned int timeout_ms)
 	return 0;
 }
 
-int client_impl::scan_device(const std::string &group, const std::string &name,
-			     unsigned int timeout_ms)
+int client_impl::scan_device(const std::string &group, const std::string &name, unsigned int timeout_ms)
 {
-	scanner scanner(*this);
+	scanner scanner(this);
 	auto combined = group + "/" + name;
 
 	_devices.erase(combined);
 
 	scanner.set_scan_timeout_ms(timeout_ms)
 	    .set_message_callback(on_device_info)
-	    .set_condition_callback(
-		[&]() { return _devices_scanned.count(combined) > 0; })
+	    .set_condition_callback([&]() { return _devices_scanned.count(combined) > 0; })
 	    .set_publisher(mqtt::make_message("pza", combined))
 	    .set_subscription_topic("pza/" + combined + "/device/atts/info");
 
@@ -392,8 +333,7 @@ int client_impl::scan_device(const std::string &group, const std::string &name,
 	return 0;
 }
 
-device::s_ptr client_impl::create_device(const std::string &group,
-					 const std::string &name)
+device::s_ptr client_impl::create_device(const std::string &group, const std::string &name)
 {
 	device::s_ptr dev;
 	json_attribute json("info");
@@ -403,16 +343,12 @@ device::s_ptr client_impl::create_device(const std::string &group,
 	auto elem = _devices_scanned.at(combined);
 
 	if (json.parse(elem) < 0) {
-		spdlog::error("failed to parse device info for device {}",
-			      combined);
+		spdlog::error("failed to parse device info for device {}", combined);
 		return nullptr;
 	}
 
-	if (json.get_unsigned_int("number_of_interfaces",
-				  info.number_of_interfaces) < 0) {
-		spdlog::error(
-		    "failed to parse number of interfaces for device {}",
-		    combined);
+	if (json.get_unsigned_int("number_of_interfaces", info.number_of_interfaces) < 0) {
+		spdlog::error("failed to parse number of interfaces for device {}", combined);
 		return nullptr;
 	}
 
@@ -420,7 +356,7 @@ device::s_ptr client_impl::create_device(const std::string &group,
 	info.name = name;
 
 	try {
-		dev = std::make_shared<device>(*this, info);
+		dev = std::make_shared<device>(this, info);
 	} catch (const std::exception &exc) {
 		spdlog::error("failed to create device: {}", exc.what());
 		return nullptr;
@@ -429,9 +365,7 @@ device::s_ptr client_impl::create_device(const std::string &group,
 	return dev;
 }
 
-device::s_ptr client_impl::register_device(const std::string &group,
-					   const std::string &name,
-					   unsigned int timeout_ms)
+device::s_ptr client_impl::register_device(const std::string &group, const std::string &name, unsigned int timeout_ms)
 {
 	if (scan_device(group, name, timeout_ms) < 0) {
 		spdlog::error("failed to scan device {}", name);
@@ -464,8 +398,7 @@ int client_impl::register_devices(unsigned int timeout_ms)
 	return ret;
 }
 
-device::s_ptr client_impl::get_device(const std::string &group,
-				      const std::string &name) const
+device::s_ptr client_impl::get_device(const std::string &group, const std::string &name) const
 {
 	auto combined = group + "/" + name;
 
@@ -484,8 +417,7 @@ std::vector<device::s_ptr> client_impl::get_devices() const
 	return ret;
 }
 
-std::vector<device::s_ptr>
-client_impl::get_devices_in_group(const std::string &group) const
+std::vector<device::s_ptr> client_impl::get_devices_in_group(const std::string &group) const
 {
 	std::vector<device::s_ptr> ret;
 
@@ -513,84 +445,45 @@ client::client(const std::string &addr, int port, std::optional<std::string> id)
 
 client::~client() = default;
 
-int client::connect()
-{
-	return _impl->connect();
-}
+int client::connect() { return _impl->connect(); }
 
-int client::disconnect()
-{
-	return _impl->disconnect();
-}
+int client::disconnect() { return _impl->disconnect(); }
 
-bool client::is_connected() const
-{
-	return _impl->is_connected();
-}
+bool client::is_connected() const { return _impl->is_connected(); }
 
-const std::string &client::get_addr() const
-{
-	return _impl->get_addr();
-}
+const std::string &client::get_addr() const { return _impl->get_addr(); }
 
-const std::string &client::get_id() const
-{
-	return _impl->get_id();
-}
+const std::string &client::get_id() const { return _impl->get_id(); }
 
-int client::get_port() const
-{
-	return _impl->get_port();
-}
+int client::get_port() const { return _impl->get_port(); }
 
-void client::set_connection_timeout(unsigned int timeout)
-{
-	_impl->set_connection_timeout(timeout);
-}
+void client::set_connection_timeout(unsigned int timeout) { _impl->set_connection_timeout(timeout); }
 
-unsigned int client::get_connection_timeout() const
-{
-	return _impl->get_connection_timeout();
-}
+unsigned int client::get_connection_timeout() const { return _impl->get_connection_timeout(); }
 
-device::s_ptr client::register_device(const std::string &group,
-				      const std::string &name,
-				      unsigned int timeout_ms)
+device::s_ptr client::register_device(const std::string &group, const std::string &name, unsigned int timeout_ms)
 {
 	return _impl->register_device(group, name, timeout_ms);
 }
 
-int client::register_devices(unsigned int timeout_ms)
-{
-	return _impl->register_devices(timeout_ms);
-}
+int client::register_devices(unsigned int timeout_ms) { return _impl->register_devices(timeout_ms); }
 
-device::s_ptr client::get_device(const std::string &group,
-				 const std::string &name) const
+device::s_ptr client::get_device(const std::string &group, const std::string &name) const
 {
 	return _impl->get_device(group, name);
 }
 
-std::vector<device::s_ptr> client::get_devices() const
-{
-	return _impl->get_devices();
-}
+std::vector<device::s_ptr> client::get_devices() const { return _impl->get_devices(); }
 
-std::vector<device::s_ptr>
-client::get_devices_in_group(const std::string &group) const
+std::vector<device::s_ptr> client::get_devices_in_group(const std::string &group) const
 {
 	return _impl->get_devices_in_group(group);
 }
 
-std::set<std::string> client::get_groups() const
-{
-	return _impl->get_groups();
-}
+std::set<std::string> client::get_groups() const { return _impl->get_groups(); }
 
-itf_base::s_ptr client::get_interface(const std::string &group,
-				      const std::string &name,
-				      const std::string &interface_group,
-				      unsigned int idx,
+itf_base::s_ptr client::get_interface(const std::string &group, const std::string &name,
+				      const std::string &interface_group, unsigned int idx,
 				      const std::string &interface_name) const
 {
 	auto dev = _impl->get_device(group, name);
@@ -599,8 +492,7 @@ itf_base::s_ptr client::get_interface(const std::string &group,
 	return dev->get_interface(interface_group, idx, interface_name);
 }
 
-itf_base::s_ptr client::get_interface(const std::string &group,
-				      const std::string &name,
+itf_base::s_ptr client::get_interface(const std::string &group, const std::string &name,
 				      const std::string &interface_name) const
 {
 	auto dev = _impl->get_device(group, name);

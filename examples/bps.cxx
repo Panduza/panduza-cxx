@@ -19,22 +19,19 @@ int main()
 	if (cli->register_devices() < 0)
 		return -1;
 
-	auto vm = cli->get_interface<pza::itf::voltmeter>(
-	    "default", "Panduza_FakeBps", "channel", 0, "vm");
+	auto vm = cli->get_interface<pza::itf::voltmeter>("default", "Panduza_FakeBps", "channel", 0, "vm");
 	if (!vm) {
 		spdlog::error("voltmeter not found");
 		return -1;
 	}
 
-	auto ctrl = cli->get_interface<pza::itf::bps_chan_ctrl>(
-	    "default", "Panduza_FakeBps", "channel", 0, "ctrl");
+	auto ctrl = cli->get_interface<pza::itf::bps_chan_ctrl>("default", "Panduza_FakeBps", "channel", 0, "ctrl");
 	if (!ctrl) {
 		spdlog::error("ctrl not found");
 		return -1;
 	}
 
-	auto am = cli->get_interface<pza::itf::ammeter>(
-	    "default", "Panduza_FakeBps", "channel", 0, "am");
+	auto am = cli->get_interface<pza::itf::ammeter>("default", "Panduza_FakeBps", "channel", 0, "am");
 	if (!am) {
 		spdlog::error("ammeter not found");
 		return -1;
@@ -44,11 +41,9 @@ int main()
 	ctrl->set_voltage(3.3);
 	ctrl->set_current(0.1);
 
-	vm->register_measure_callback(
-	    [&]() { spdlog::info("voltage: {}", vm->get_measure()); });
+	vm->register_measure_callback([&]() { spdlog::info("voltage: {}", vm->get_measure()); });
 
-	am->register_measure_callback(
-	    [&]() { spdlog::info("current: {}", am->get_measure()); });
+	am->register_measure_callback([&]() { spdlog::info("current: {}", am->get_measure()); });
 
 	while (true)
 		;

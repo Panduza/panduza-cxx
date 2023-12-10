@@ -11,7 +11,7 @@ public:
 	using u_ptr = std::unique_ptr<platform>;
 	using w_ptr = std::weak_ptr<platform>;
 
-	explicit platform(mqtt_service &mqtt, itf_info &info);
+	explicit platform(mqtt_service *mqtt, itf_info &info);
 	platform(const platform &) = delete;
 	platform(platform &&) = delete;
 	platform &operator=(const platform &) = delete;

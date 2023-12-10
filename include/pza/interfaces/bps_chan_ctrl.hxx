@@ -11,7 +11,7 @@ public:
 	using u_ptr = std::unique_ptr<bps_chan_ctrl>;
 	using w_ptr = std::weak_ptr<bps_chan_ctrl>;
 
-	explicit bps_chan_ctrl(mqtt_service &mqtt, itf_info &info);
+	explicit bps_chan_ctrl(mqtt_service *mqtt, itf_info &info);
 	bps_chan_ctrl(const bps_chan_ctrl &) = delete;
 	bps_chan_ctrl(bps_chan_ctrl &&) = delete;
 	bps_chan_ctrl &operator=(const bps_chan_ctrl &) = delete;
