@@ -12,7 +12,9 @@ RUN pacman -Sy --noconfirm \
     libunwind \
     wine \
     gcc \
-    clang
+    clang \
+    gtest \
+    grcov
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"

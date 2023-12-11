@@ -25,7 +25,8 @@ TEST(core, log_level)
 	EXPECT_EQ(pza::core::get_log_level(), pza::core::log_level::off);
 }
 
-TEST(core, version) { 
-    EXPECT_NE(pza::core::get_version(), "");
-    EXPECT_NE(pza::core::get_version_githash(), "");
+TEST(core, version)
+{
+	EXPECT_NE(pza::core::get_version(), "");
+	EXPECT_NE(pza::core::get_version_githash(), "");
 }

@@ -7,8 +7,8 @@
 
 struct device_impl;
 class mqtt_service;
-
 struct device_info;
+
 namespace pza
 {
 class client;

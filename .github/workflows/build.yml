@@ -52,15 +52,27 @@ jobs:
         else
           tidy="False"
         fi
-        cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} -DWITH_TIDY=$tidy 
+        if [ "${{ matrix.os }}" = "windows" ]; then
+          cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} -DWITH_TIDY=$tidy -DWITH_TESTS=False
+        else
+          cmake --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} -DWITH_TIDY=$tidy -DWITH_TESTS=True -DWITH_COVERAGE=True
+        fi
         cmake --build --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}
 
     - name: "Test for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+      if: ${{ matrix.os == 'Linux' }}
       run: |
-        echo "Test for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+        ctest --preset ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}
 
 
     - name: "Coverage"
-      if: ${{ matrix.os == 'linux' && matrix.compiler == 'gcc' && matrix.build_type == 'debug' && matrix.lib_type == 'static' }}
+      if: ${{ matrix.os == 'linux' && matrix.compiler == 'clang' && matrix.lib_type == 'shared' && matrix.build_type == 'debug' }}
       run: |
-        echo "Coverage for ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }}-${{ matrix.build_type }}"
+        grcov . -s ./ -t html --llvm -o ./build/coverage/ --binary-path ./build/${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.lib_type }} --ignore '*test*' --ignore '*examples*' --ignore '*include*' --llvm-path=/usr/bin
+
+    - name: "Upload coverage artifact"
+      if: ${{ matrix.os == 'linux' && matrix.compiler == 'clang' && matrix.lib_type == 'shared' && matrix.build_type == 'debug' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: ./build/coverage/
