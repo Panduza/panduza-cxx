@@ -26,8 +26,14 @@ struct itf_impl {
 	itf_impl(itf_impl &&) = delete;
 	itf_impl &operator=(itf_impl &&) = delete;
 
-	const std::string &get_name() const { return info.name; }
-	const std::string &get_type() const { return info.type; }
+	const std::string &get_name() const
+	{
+		return info.name;
+	}
+	const std::string &get_type() const
+	{
+		return info.type;
+	}
 
 	void register_attributes(const std::list<attribute::s_ptr> &attribute_list);
 

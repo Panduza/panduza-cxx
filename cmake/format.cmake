@@ -1,4 +1,4 @@
-find_program(CLANG_FORMAT "clang-format")
+find_program(CLANG_FORMAT "clang-format" REQUIRED)
 
 file(GLOB_RECURSE ALL_SOURCE_FILES 
   ${CMAKE_SOURCE_DIR}/source/*.cxx

@@ -23,9 +23,15 @@ public:
 	attribute &operator=(attribute &&) = delete;
 	~attribute();
 
-	const std::string &get_name() const { return _name; }
+	const std::string &get_name() const
+	{
+		return _name;
+	}
 
-	template <typename T> void register_field(const std::string &name) { _fields[name] = T(); }
+	template <typename T> void register_field(const std::string &name)
+	{
+		_fields[name] = T();
+	}
 
 	template <typename T> const T &get_field(const std::string &name)
 	{
@@ -61,10 +67,16 @@ public:
 
 	void on_message(mqtt::const_message_ptr msg);
 
-	void register_callback(const std::function<void(void)> &cb) { _callbacks.push_back(cb); }
+	void register_callback(const std::function<void(void)> &cb)
+	{
+		_callbacks.push_back(cb);
+	}
 	void remove_callback(const std::function<void(void)> &cb);
 
-	void set_msg_callback(const std::function<int(const nlohmann::json &data)> &cb) { _msg_cb = cb; }
+	void set_msg_callback(const std::function<int(const nlohmann::json &data)> &cb)
+	{
+		_msg_cb = cb;
+	}
 
 private:
 	using field_types = std::variant<std::string, unsigned int, int, double, bool>;

@@ -17,11 +17,23 @@ public:
 	topic &operator=(topic &&) = delete;
 	~topic() = default;
 
-	[[nodiscard]] bool is_valid() const { return _is_valid; }
+	[[nodiscard]] bool is_valid() const
+	{
+		return _is_valid;
+	}
 
-	[[nodiscard]] std::string get_topic() const { return _topic; }
-	[[nodiscard]] std::string get_group() const { return _list[1]; }
-	[[nodiscard]] std::string get_device_name() const { return _list[2]; }
+	[[nodiscard]] std::string get_topic() const
+	{
+		return _topic;
+	}
+	[[nodiscard]] std::string get_group() const
+	{
+		return _list[1];
+	}
+	[[nodiscard]] std::string get_device_name() const
+	{
+		return _list[2];
+	}
 
 	static std::string regexify_topic(const std::string &topic);
 	static bool topic_matches(const std::string &str, const std::string &fnmatchPattern);

@@ -8,7 +8,7 @@ namespace pza::utils
 
 struct itf_group_info {
 	std::string group_name;
-	unsigned int index;
+	unsigned int index = 0;
 	std::string interface_name;
 };
 

@@ -56,25 +56,55 @@ int bps_chan_ctrl::set_current(double amps)
 	return _current->set_field<double>("value", amps);
 }
 
-int bps_chan_ctrl::set_enable(bool enable) { return _enable->set_field<bool>("value", enable); }
+int bps_chan_ctrl::set_enable(bool enable)
+{
+	return _enable->set_field<bool>("value", enable);
+}
 
-bool bps_chan_ctrl::get_enable() { return _enable->get_field<bool>("value"); }
+bool bps_chan_ctrl::get_enable()
+{
+	return _enable->get_field<bool>("value");
+}
 
-double bps_chan_ctrl::get_min_voltage() { return _voltage->get_field<double>("min"); }
+double bps_chan_ctrl::get_min_voltage()
+{
+	return _voltage->get_field<double>("min");
+}
 
-double bps_chan_ctrl::get_max_voltage() { return _voltage->get_field<double>("max"); }
+double bps_chan_ctrl::get_max_voltage()
+{
+	return _voltage->get_field<double>("max");
+}
 
-double bps_chan_ctrl::get_min_current() { return _current->get_field<double>("min"); }
+double bps_chan_ctrl::get_min_current()
+{
+	return _current->get_field<double>("min");
+}
 
-double bps_chan_ctrl::get_max_current() { return _current->get_field<double>("max"); }
+double bps_chan_ctrl::get_max_current()
+{
+	return _current->get_field<double>("max");
+}
 
-double bps_chan_ctrl::get_preset_voltage() { return _voltage->get_field<double>("value"); }
+double bps_chan_ctrl::get_preset_voltage()
+{
+	return _voltage->get_field<double>("value");
+}
 
-double bps_chan_ctrl::get_preset_current() { return _current->get_field<double>("value"); }
+double bps_chan_ctrl::get_preset_current()
+{
+	return _current->get_field<double>("value");
+}
 
-unsigned int bps_chan_ctrl::get_num_decimals_voltage() { return _voltage->get_field<unsigned int>("decimals"); }
+unsigned int bps_chan_ctrl::get_num_decimals_voltage()
+{
+	return _voltage->get_field<unsigned int>("decimals");
+}
 
-unsigned int bps_chan_ctrl::get_num_decimals_current() { return _current->get_field<unsigned int>("decimals"); }
+unsigned int bps_chan_ctrl::get_num_decimals_current()
+{
+	return _current->get_field<unsigned int>("decimals");
+}
 
 void bps_chan_ctrl::register_enable_callback(const std::function<void()> &callback)
 {

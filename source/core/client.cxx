@@ -35,14 +35,32 @@ struct client_impl : mqtt_service {
 
 	int connect();
 	int disconnect();
-	bool is_connected() const { return (_paho_client->is_connected()); }
+	bool is_connected() const
+	{
+		return (_paho_client->is_connected());
+	}
 
-	const std::string &get_addr() const { return _addr; }
-	const std::string &get_id() const { return _id; }
-	int get_port() const { return _port; }
+	const std::string &get_addr() const
+	{
+		return _addr;
+	}
+	const std::string &get_id() const
+	{
+		return _id;
+	}
+	int get_port() const
+	{
+		return _port;
+	}
 
-	void set_connection_timeout(unsigned int timeout) { _conn_timeout = timeout; }
-	unsigned int get_connection_timeout() const { return _conn_timeout; }
+	void set_connection_timeout(unsigned int timeout)
+	{
+		_conn_timeout = timeout;
+	}
+	unsigned int get_connection_timeout() const
+	{
+		return _conn_timeout;
+	}
 
 	int publish(const std::string &topic, const std::string &payload) override;
 	int publish(mqtt::const_message_ptr msg) override;
@@ -160,7 +178,10 @@ int client_impl::disconnect()
 	return 0;
 }
 
-void client_impl::connection_lost(const std::string &cause) { spdlog::error("connection lost: {}", cause); }
+void client_impl::connection_lost(const std::string &cause)
+{
+	spdlog::error("connection lost: {}", cause);
+}
 
 int client_impl::publish(const std::string &topic, const std::string &payload)
 {
@@ -445,42 +466,75 @@ client::client(const std::string &addr, int port, std::optional<std::string> id)
 
 client::~client() = default;
 
-int client::connect() { return _impl->connect(); }
+int client::connect()
+{
+	return _impl->connect();
+}
 
-int client::disconnect() { return _impl->disconnect(); }
+int client::disconnect()
+{
+	return _impl->disconnect();
+}
 
-bool client::is_connected() const { return _impl->is_connected(); }
+bool client::is_connected() const
+{
+	return _impl->is_connected();
+}
 
-const std::string &client::get_addr() const { return _impl->get_addr(); }
+const std::string &client::get_addr() const
+{
+	return _impl->get_addr();
+}
 
-const std::string &client::get_id() const { return _impl->get_id(); }
+const std::string &client::get_id() const
+{
+	return _impl->get_id();
+}
 
-int client::get_port() const { return _impl->get_port(); }
+int client::get_port() const
+{
+	return _impl->get_port();
+}
 
-void client::set_connection_timeout(unsigned int timeout) { _impl->set_connection_timeout(timeout); }
+void client::set_connection_timeout(unsigned int timeout)
+{
+	_impl->set_connection_timeout(timeout);
+}
 
-unsigned int client::get_connection_timeout() const { return _impl->get_connection_timeout(); }
+unsigned int client::get_connection_timeout() const
+{
+	return _impl->get_connection_timeout();
+}
 
 device::s_ptr client::register_device(const std::string &group, const std::string &name, unsigned int timeout_ms)
 {
 	return _impl->register_device(group, name, timeout_ms);
 }
 
-int client::register_devices(unsigned int timeout_ms) { return _impl->register_devices(timeout_ms); }
+int client::register_devices(unsigned int timeout_ms)
+{
+	return _impl->register_devices(timeout_ms);
+}
 
 device::s_ptr client::get_device(const std::string &group, const std::string &name) const
 {
 	return _impl->get_device(group, name);
 }
 
-std::vector<device::s_ptr> client::get_devices() const { return _impl->get_devices(); }
+std::vector<device::s_ptr> client::get_devices() const
+{
+	return _impl->get_devices();
+}
 
 std::vector<device::s_ptr> client::get_devices_in_group(const std::string &group) const
 {
 	return _impl->get_devices_in_group(group);
 }
 
-std::set<std::string> client::get_groups() const { return _impl->get_groups(); }
+std::set<std::string> client::get_groups() const
+{
+	return _impl->get_groups();
+}
 
 itf_base::s_ptr client::get_interface(const std::string &group, const std::string &name,
 				      const std::string &interface_group, unsigned int idx,
