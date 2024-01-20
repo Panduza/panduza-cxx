@@ -66,6 +66,8 @@ public:
 		return std::dynamic_pointer_cast<T>(get_interface(group, name, interface_name));
 	}
 
+	[[nodiscard]] std::vector<itf_base::s_ptr> get_interfaces() const;
+
 private:
 	static constexpr unsigned int platforms_timeout_default = 500;
 	static constexpr unsigned int device_timeout_default = 500;

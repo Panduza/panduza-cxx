@@ -12,6 +12,7 @@ target_sources(${LIBRARY_NAME}
     core/interface_factory.cxx
     core/attribute.cxx
 
+    utils/interface_group.cxx
     utils/json_attribute.cxx
     utils/topic.cxx
 

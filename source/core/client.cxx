@@ -282,8 +282,8 @@ int client_impl::scan_platforms(unsigned int timeout_ms)
 		spdlog::error("No devices found on scanned platforms");
 		return -1;
 	}
-	spdlog::info("Found {} platform{} with {} devices", _platforms_scanned.size(),
-		     _platforms_scanned.size() > 1 ? "s" : "", _device_count);
+	spdlog::info("Found {} platform{} with {} device{}", _platforms_scanned.size(),
+		     _platforms_scanned.size() > 1 ? "s" : "", _device_count, _device_count > 1 ? "s" : "");
 	return 0;
 }
 

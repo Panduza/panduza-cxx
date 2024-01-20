@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <set>
 
 #include <pza/core/interface.hxx>
 
@@ -52,9 +53,16 @@ public:
 		return std::dynamic_pointer_cast<T>(get_interface(interface_group, idx, name));
 	}
 
-	[[nodiscard]] std::vector<std::string> get_interface_names() const;
+	[[nodiscard]] std::vector<std::string> get_interfaces_name() const;
 
-	[[nodiscard]] unsigned int get_interface_group_count(const std::string &group) const;
+	[[nodiscard]] std::vector<itf_base::s_ptr> get_interfaces_in_group(const std::string &group) const;
+
+	[[nodiscard]] std::vector<itf_base::s_ptr> get_interfaces_in_group(const std::string &group,
+									   unsigned int index) const;
+
+	[[nodiscard]] std::set<std::string> get_interface_groups() const;
+
+	[[nodiscard]] std::vector<itf_base::s_ptr> get_interfaces() const;
 
 private:
 	std::unique_ptr<device_impl> _impl;

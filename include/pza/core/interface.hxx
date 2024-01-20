@@ -15,8 +15,7 @@ struct itf_info;
 
 namespace pza
 {
-// We can't use the name interface because it's a reserved keyford for Windows
-// C++ (lol)
+// Can't use the name "interface" because it's a reserved keyford for Windows in C++
 class itf_base
 {
 public:

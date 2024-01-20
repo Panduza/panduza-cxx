@@ -11,6 +11,7 @@
 #include <pza/core/device.hxx>
 #include <pza/core/interface.hxx>
 
+#include <pza/core/utils.hxx>
 #include <pza/interfaces/device.hxx>
 
 #include "../utils/json_attribute.hxx"
@@ -41,21 +42,29 @@ struct device_impl {
 
 	void on_interface_info(mqtt::const_message_ptr msg);
 
-	unsigned int get_number_of_interfaces() const { return interfaces.size(); }
+	unsigned int get_number_of_interfaces() const
+	{
+		return interfaces.size();
+	}
 
 	itf_base::s_ptr find_interface(const std::string &name) const;
 	itf_base::s_ptr get_interface(const std::string &name) const;
 	itf_base::s_ptr get_interface(const std::string &interface_group, unsigned int idx,
 				      const std::string &name) const;
 
-	std::vector<std::string> get_interface_names() const;
+	std::vector<std::string> get_interfaces_name() const;
 
-	unsigned int get_interface_group_count(const std::string &group) const;
+	std::vector<itf_base::s_ptr> get_interfaces_in_group(const std::string &group) const;
+	std::vector<itf_base::s_ptr> get_interfaces_in_group(const std::string &group, unsigned int index) const;
+	std::set<std::string> get_interface_groups() const;
+
+	std::vector<itf_base::s_ptr> get_interfaces() const;
 
 	struct device_info info;
 	std::unordered_map<std::string, std::string> interfaces_scanned;
-	std::map<std::string, itf_base::s_ptr> interfaces;
 	itf::device::s_ptr device_interface = nullptr;
+
+	std::unordered_map<std::string, itf_base::s_ptr> interfaces;
 };
 
 device_impl::device_impl(mqtt_service *mqtt, const struct device_info &info)
@@ -98,17 +107,18 @@ itf_base::s_ptr device_impl::find_interface(const std::string &name) const
 	return it->second;
 }
 
-itf_base::s_ptr device_impl::get_interface(const std::string &name) const { return find_interface(name); }
+itf_base::s_ptr device_impl::get_interface(const std::string &name) const
+{
+	return find_interface(name);
+}
 
 itf_base::s_ptr device_impl::get_interface(const std::string &interface_group, unsigned int idx,
 					   const std::string &name) const
 {
-	std::string full_name = ":" + interface_group + "_" + std::to_string(idx) + ":_" + name;
-
-	return find_interface(full_name);
+	return find_interface(utils::format_interface_group(interface_group, idx, name));
 }
 
-std::vector<std::string> device_impl::get_interface_names() const
+std::vector<std::string> device_impl::get_interfaces_name() const
 {
 	std::vector<std::string> names;
 
@@ -118,18 +128,54 @@ std::vector<std::string> device_impl::get_interface_names() const
 	return names;
 }
 
-unsigned int device_impl::get_interface_group_count(const std::string &group) const
+std::vector<itf_base::s_ptr> device_impl::get_interfaces_in_group(const std::string &group) const
 {
-	std::regex pattern(":(" + group + ")_([0-9]+):_.*");
-	std::smatch matches;
-	std::set<std::string> unique_ids;
+	std::vector<itf_base::s_ptr> interfaces_in_group;
+	struct utils::itf_group_info info;
 
 	for (const auto &itf : interfaces) {
-		if (std::regex_match(itf.first, matches, pattern)) {
-			unique_ids.insert(matches[2].str());
+		if (utils::get_grouped_interface_info(itf.first, info) == 0 && info.group_name == group) {
+			interfaces_in_group.push_back(itf.second);
 		}
 	}
-	return unique_ids.size();
+	return interfaces_in_group;
+}
+
+std::vector<itf_base::s_ptr> device_impl::get_interfaces_in_group(const std::string &group, unsigned int index) const
+{
+	std::vector<itf_base::s_ptr> interfaces_in_group;
+	struct utils::itf_group_info info;
+
+	for (const auto &itf : interfaces) {
+		if (utils::get_grouped_interface_info(itf.first, info) == 0 && info.group_name == group &&
+		    info.index == index) {
+			interfaces_in_group.push_back(itf.second);
+		}
+	}
+	return interfaces_in_group;
+}
+
+std::set<std::string> device_impl::get_interface_groups() const
+{
+	std::set<std::string> unique_groups;
+	struct utils::itf_group_info info;
+
+	for (const auto &itf : interfaces) {
+		if (utils::get_grouped_interface_info(itf.first, info) == 0) {
+			unique_groups.insert(info.group_name);
+		}
+	}
+	return unique_groups;
+}
+
+std::vector<itf_base::s_ptr> device_impl::get_interfaces() const
+{
+	std::vector<itf_base::s_ptr> vec;
+
+	for (const auto &itf : interfaces) {
+		vec.push_back(itf.second);
+	}
+	return vec;
 }
 
 device::device(mqtt_service *mqtt, struct device_info &info)
@@ -170,19 +216,40 @@ device::device(mqtt_service *mqtt, struct device_info &info)
 
 device::~device() = default;
 
-const std::string &device::get_name() const { return _impl->info.name; }
+const std::string &device::get_name() const
+{
+	return _impl->info.name;
+}
 
-const std::string &device::get_group() const { return _impl->info.group; }
+const std::string &device::get_group() const
+{
+	return _impl->info.group;
+}
 
-const std::string &device::get_model() const { return _impl->info.model; }
+const std::string &device::get_model() const
+{
+	return _impl->info.model;
+}
 
-const std::string &device::get_manufacturer() const { return _impl->info.manufacturer; }
+const std::string &device::get_manufacturer() const
+{
+	return _impl->info.manufacturer;
+}
 
-const std::string &device::get_family() const { return _impl->info.family; }
+const std::string &device::get_family() const
+{
+	return _impl->info.family;
+}
 
-unsigned int device::get_number_of_interfaces() const { return _impl->get_number_of_interfaces(); }
+unsigned int device::get_number_of_interfaces() const
+{
+	return _impl->get_number_of_interfaces();
+}
 
-itf_base::s_ptr device::get_interface(const std::string &name) const { return _impl->get_interface(name); }
+itf_base::s_ptr device::get_interface(const std::string &name) const
+{
+	return _impl->get_interface(name);
+}
 
 itf_base::s_ptr device::get_interface(const std::string &interface_group, unsigned int idx,
 				      const std::string &name) const
@@ -190,9 +257,27 @@ itf_base::s_ptr device::get_interface(const std::string &interface_group, unsign
 	return _impl->get_interface(interface_group, idx, name);
 }
 
-std::vector<std::string> device::get_interface_names() const { return _impl->get_interface_names(); }
-
-unsigned int device::get_interface_group_count(const std::string &group) const
+std::vector<std::string> device::get_interfaces_name() const
 {
-	return _impl->get_interface_group_count(group);
+	return _impl->get_interfaces_name();
+}
+
+std::vector<itf_base::s_ptr> device::get_interfaces_in_group(const std::string &group) const
+{
+	return _impl->get_interfaces_in_group(group);
+}
+
+std::vector<itf_base::s_ptr> device::get_interfaces_in_group(const std::string &group, unsigned int index) const
+{
+	return _impl->get_interfaces_in_group(group, index);
+}
+
+std::set<std::string> device::get_interface_groups() const
+{
+	return _impl->get_interface_groups();
+}
+
+std::vector<itf_base::s_ptr> device::get_interfaces() const
+{
+	return _impl->get_interfaces();
 }

@@ -82,7 +82,10 @@ void itf_impl::register_attributes(const std::list<attribute::s_ptr> &attribute_
 	}
 }
 
-attribute &itf_impl::get_attribute(const std::string &name) { return *attributes[name]; }
+attribute &itf_impl::get_attribute(const std::string &name)
+{
+	return *attributes[name];
+}
 
 int itf_impl::send_message(const nlohmann::json &data)
 {
@@ -96,6 +99,12 @@ itf_base::itf_base(mqtt_service *mqtt, itf_info &info)
 
 itf_base::~itf_base() = default;
 
-const std::string &itf_base::get_name() const { return _impl->get_name(); }
+const std::string &itf_base::get_name() const
+{
+	return _impl->get_name();
+}
 
-const std::string &itf_base::get_type() const { return _impl->get_type(); }
+const std::string &itf_base::get_type() const
+{
+	return _impl->get_type();
+}

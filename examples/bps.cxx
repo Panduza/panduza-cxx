@@ -21,6 +21,14 @@ int main()
 	if (cli->register_devices() < 0)
 		return -1;
 
+	for (auto& dev : cli->get_devices())
+		spdlog::info("device: {}", dev->get_name());
+
+	auto bps = cli->get_device("default", "Panduza_FakeBps");
+
+	for (auto itf : bps->get_interfaces())
+		spdlog::info("interface: {}", itf->get_name());
+
 	auto vm = cli->get_interface<pza::itf::voltmeter>("default", "Panduza_FakeBps", "channel", 0, "vm");
 	if (!vm) {
 		spdlog::error("voltmeter not found");
