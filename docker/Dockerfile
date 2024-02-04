@@ -1,4 +1,4 @@
-FROM archlinux:base-devel-20231001.0.182270
+FROM archlinux:base-devel-20240101.0.204074
 
 RUN echo -e "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist" | sudo tee -a /etc/pacman.conf
 RUN pacman -Syu --noconfirm
@@ -14,7 +14,8 @@ RUN pacman -Sy --noconfirm \
     gcc \
     clang \
     gtest \
-    grcov
+    grcov \
+    nodejs
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"

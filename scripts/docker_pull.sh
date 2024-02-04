@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker pull ghcr.io/panduza/pzacx-build-img:latest
+docker pull ghcr.io/panduza/pzacxx-build-img:latest

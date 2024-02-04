@@ -3,6 +3,18 @@ name: CI Workflow
 on: [push, pull_request]
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/panduza/pzacxx-build-img:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Format
+        run: |
+          ./scripts/format.sh
+
   build:
     runs-on: ubuntu-latest
     container:
