@@ -16,7 +16,7 @@ static constexpr unsigned int attributes_timeout = 2;
 
 itf_impl::itf_impl(mqtt_service *mqtt, itf_info &info)
     : info(info),
-      topic_base("pza/" + info.group + "/" + info.device_name + "/" + info.name),
+      topic_base("pza/" + info.bench + "/" + info.device_name + "/" + info.name),
       topic_cmd(topic_base + "/cmds/set"),
       mqtt(mqtt)
 {

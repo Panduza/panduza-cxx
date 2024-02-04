@@ -1,7 +1,7 @@
 #include <pza/core/client.hxx>
 #include <pza/core/core.hxx>
 #include <pza/interfaces/ammeter.hxx>
-#include <pza/interfaces/bps_chan_ctrl.hxx>
+#include <pza/interfaces/bpc.hxx>
 #include <pza/interfaces/voltmeter.hxx>
 
 static const std::string addr = "localhost";
@@ -35,7 +35,7 @@ int main()
 		return -1;
 	}
 
-	auto ctrl = cli->get_interface<pza::itf::bps_chan_ctrl>("default", "Panduza_FakeBps", "channel", 0, "ctrl");
+	auto ctrl = cli->get_interface<pza::itf::bpc>("default", "Panduza_FakeBps", "channel", 0, "ctrl");
 	if (!ctrl) {
 		spdlog::error("ctrl not found");
 		return -1;
@@ -55,7 +55,9 @@ int main()
 
 	am->register_measure_callback([&]() { spdlog::info("current: {}", am->get_measure()); });
 
-	while (true)
-		;
+	cli->disconnect();
+
+	//while (true)
+	//	;
 	return 0;
 }

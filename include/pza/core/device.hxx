@@ -62,6 +62,8 @@ public:
 
 	[[nodiscard]] std::set<std::string> get_interface_groups() const;
 
+	[[nodiscard]] size_t get_interface_groups_count() const;
+
 	[[nodiscard]] std::vector<itf_base::s_ptr> get_interfaces() const;
 
 private:

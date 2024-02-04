@@ -4,19 +4,19 @@
 
 namespace pza::itf
 {
-class bps_chan_ctrl : public itf_base
+class bpc : public itf_base
 {
 public:
-	using s_ptr = std::shared_ptr<bps_chan_ctrl>;
-	using u_ptr = std::unique_ptr<bps_chan_ctrl>;
-	using w_ptr = std::weak_ptr<bps_chan_ctrl>;
+	using s_ptr = std::shared_ptr<bpc>;
+	using u_ptr = std::unique_ptr<bpc>;
+	using w_ptr = std::weak_ptr<bpc>;
 
-	explicit bps_chan_ctrl(mqtt_service *mqtt, itf_info &info);
-	bps_chan_ctrl(const bps_chan_ctrl &) = delete;
-	bps_chan_ctrl(bps_chan_ctrl &&) = delete;
-	bps_chan_ctrl &operator=(const bps_chan_ctrl &) = delete;
-	bps_chan_ctrl &operator=(bps_chan_ctrl &&) = delete;
-	~bps_chan_ctrl() override;
+	explicit bpc(mqtt_service *mqtt, itf_info &info);
+	bpc(const bpc &) = delete;
+	bpc(bpc &&) = delete;
+	bpc &operator=(const bpc &) = delete;
+	bpc &operator=(bpc &&) = delete;
+	~bpc() override;
 
 	int set_voltage(double volts);
 	int set_current(double amps);

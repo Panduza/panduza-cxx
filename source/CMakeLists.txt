@@ -21,7 +21,7 @@ target_sources(${LIBRARY_NAME}
     interfaces/meter.cxx
     interfaces/voltmeter.cxx
     interfaces/ammeter.cxx
-    interfaces/bps_chan_ctrl.cxx
+    interfaces/bpc.cxx
 
     ${CMAKE_CURRENT_BINARY_DIR}/version.cxx
 )

@@ -58,13 +58,15 @@ struct device_impl {
 	std::vector<itf_base::s_ptr> get_interfaces_in_group(const std::string &group, unsigned int index) const;
 	std::set<std::string> get_interface_groups() const;
 
+	size_t get_interface_groups_count() const;
+
 	std::vector<itf_base::s_ptr> get_interfaces() const;
 
 	struct device_info info;
 	std::unordered_map<std::string, std::string> interfaces_scanned;
 	itf::device::s_ptr device_interface = nullptr;
 
-	std::unordered_map<std::string, itf_base::s_ptr> interfaces;
+	std::map<std::string, itf_base::s_ptr> interfaces;
 };
 
 device_impl::device_impl(mqtt_service *mqtt, const struct device_info &info)
@@ -178,6 +180,11 @@ std::vector<itf_base::s_ptr> device_impl::get_interfaces() const
 	return vec;
 }
 
+size_t device_impl::get_interface_groups_count() const
+{
+	return get_interface_groups().size();
+}
+
 device::device(mqtt_service *mqtt, struct device_info &info)
     : _impl(std::make_unique<device_impl>(mqtt, info))
 {
@@ -280,4 +287,9 @@ std::set<std::string> device::get_interface_groups() const
 std::vector<itf_base::s_ptr> device::get_interfaces() const
 {
 	return _impl->get_interfaces();
+}
+
+size_t device::get_interface_groups_count() const
+{
+	return _impl->get_interface_groups_count();
 }

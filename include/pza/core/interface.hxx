@@ -11,10 +11,17 @@
 struct itf_impl;
 class mqtt_service;
 class attribute;
-struct itf_info;
 
 namespace pza
 {
+struct itf_info
+{
+	std::string bench;
+	std::string device_name;
+	std::string name;
+	std::string type;
+};
+
 // Can't use the name "interface" because it's a reserved keyford for Windows in C++
 class itf_base
 {

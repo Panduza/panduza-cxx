@@ -3,7 +3,7 @@
 #include <pza/core/device.hxx>
 
 #include <pza/interfaces/ammeter.hxx>
-#include <pza/interfaces/bps_chan_ctrl.hxx>
+#include <pza/interfaces/bpc.hxx>
 #include <pza/interfaces/device.hxx>
 #include <pza/interfaces/platform.hxx>
 #include <pza/interfaces/voltmeter.hxx>
@@ -18,7 +18,7 @@ static const std::unordered_map<std::string, interface_factory::factory_function
     {"platform", allocate_interface<itf::platform>},
     {"ammeter", allocate_interface<itf::ammeter>},
     {"voltmeter", allocate_interface<itf::voltmeter>},
-    {"bpc", allocate_interface<itf::bps_chan_ctrl>}};
+    {"bpc", allocate_interface<itf::bpc>}};
 
 itf_base::s_ptr interface_factory::create_interface(mqtt_service *mqtt, const std::string &group,
 						    const std::string &device_name, const std::string &name,
@@ -27,7 +27,7 @@ itf_base::s_ptr interface_factory::create_interface(mqtt_service *mqtt, const st
 	itf_info info;
 
 	info.name = name;
-	info.group = group;
+	info.bench = group;
 	info.device_name = device_name;
 	info.type = type;
 

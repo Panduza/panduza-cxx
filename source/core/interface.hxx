@@ -10,13 +10,6 @@
 
 using namespace pza;
 
-struct itf_info {
-	std::string group;
-	std::string device_name;
-	std::string name;
-	std::string type;
-};
-
 struct itf_impl {
 	explicit itf_impl(mqtt_service *mqtt, itf_info &info);
 
