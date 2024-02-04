@@ -10,7 +10,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(cmake/compiler.cmake)
-include(cmake/format.cmake)
 include(cmake/lib.cmake)
 
 find_package(spdlog REQUIRED)

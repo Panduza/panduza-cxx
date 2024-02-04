@@ -19,12 +19,12 @@ while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
         --format)
-            FORMAT_OPTIONS=true
+            FORMAT_OPTION=true
             shift
             shift
             ;;
         --check)
-            CHECK_OPTIONS=true
+            CHECK_OPTION=true
             shift
             shift
             ;;
@@ -35,18 +35,18 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [ "$FORMAT_OPTIONS" == false ] && [ "$CHECK_OPTIONS" == false ]; then
+if [ "$FORMAT_OPTION" == false ] && [ "$CHECK_OPTION" == false ]; then
     echo "No options provided. Please provide either --format or --check."
     exit 1
 fi
 
-if [ "$FORMAT_OPTIONS" == true ]
+if [ "$FORMAT_OPTION" == true ]
 then
     echo "Formatting code..."
     $CLANG_FORMAT_PATH --style=file -i $SOURCE_FILES
 fi
 
-if [ "$CHECK_OPTIONS" == true ]
+if [ "$CHECK_OPTION" == true ]
 then
     echo "Checking code formatting..."
     $CLANG_FORMAT_PATH --style=file -output-replacements-xml $SOURCE_FILES | grep "<replacement " &> /dev/null && echo "Error! Code is not well formatted." && exit 1 || echo "Format OK" && exit 0

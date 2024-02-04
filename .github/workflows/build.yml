@@ -13,7 +13,7 @@ jobs:
 
       - name: Format
         run: |
-          ./scripts/format.sh
+          ./scripts/format.sh --check
 
   build:
     runs-on: ubuntu-latest

@@ -35,7 +35,7 @@ struct itf_impl {
 	int send_message(const nlohmann::json &data);
 
 	itf_info info;
-	std::string topic_base;
+	 std::string topic_base;
 	std::string topic_cmd;
 	mqtt_service *mqtt;
 	std::unordered_map<std::string, attribute::s_ptr> attributes;
