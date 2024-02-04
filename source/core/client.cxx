@@ -159,8 +159,7 @@ int client_impl::connect()
 
 	try {
 		_paho_client->connect(connOpts)->wait_for(std::chrono::milliseconds(_conn_timeout));
-	}
-	catch (const mqtt::exception &exc) {
+	} catch (const mqtt::exception &exc) {
 		spdlog::error("Client {} failed to connect on {}:{}", _id, _addr, _port);
 		return -1;
 	}
@@ -175,8 +174,7 @@ int client_impl::disconnect()
 
 	try {
 		_paho_client->disconnect()->wait_for(std::chrono::milliseconds(_conn_timeout));
-	}
-	catch (const mqtt::exception &exc) {
+	} catch (const mqtt::exception &exc) {
 		spdlog::error("Client {} failed to disconnect on {}:{}", _id, _addr, _port);
 		return -1;
 	}
@@ -198,8 +196,7 @@ int client_impl::publish(mqtt::const_message_ptr msg)
 {
 	try {
 		_paho_client->publish(msg)->wait_for(std::chrono::milliseconds(msg_timeout_default_ms));
-	}
-	catch (const mqtt::exception &exc) {
+	} catch (const mqtt::exception &exc) {
 		spdlog::error("Client {} failed to publish", _id);
 		return -1;
 	}
@@ -215,8 +212,7 @@ int client_impl::subscribe(const std::string &topic, const std::function<void(mq
 	_listeners[t] = cb;
 	try {
 		_paho_client->subscribe(topic, 0)->wait_for(std::chrono::seconds(_conn_timeout));
-	}
-	catch (const mqtt::exception &exc) {
+	} catch (const mqtt::exception &exc) {
 		spdlog::error("Client {} failed to subscribe to topic: {}", _id, topic);
 		_listeners.erase(t);
 		return -1;
@@ -232,8 +228,7 @@ int client_impl::unsubscribe(const std::string &topic)
 
 	try {
 		_paho_client->unsubscribe(topic)->wait_for(std::chrono::seconds(_conn_timeout));
-	}
-	catch (const mqtt::exception &exc) {
+	} catch (const mqtt::exception &exc) {
 		spdlog::error("Client {} failed to unsubscribe from topic: {}", _id, topic);
 		return -1;
 	}

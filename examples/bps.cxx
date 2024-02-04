@@ -57,7 +57,7 @@ int main()
 
 	cli->disconnect();
 
-	//while (true)
+	// while (true)
 	//	;
 	return 0;
 }

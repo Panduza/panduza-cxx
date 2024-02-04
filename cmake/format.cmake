@@ -14,6 +14,6 @@ add_custom_target(format
 )
 
 add_custom_target(format-check
-    COMMAND ${CLANG_FORMAT} --style=file -output-replacements-xml ${ALL_SOURCE_FILES} | grep \"<replacement \" && echo \"check-format failed. Run cmake --build <build> format\" && exit 1 || exit 0
+    COMMAND ${CLANG_FORMAT} --style=file -output-replacements-xml ${ALL_SOURCE_FILES} | grep \"<replacement \" && exit 1 || exit 0
     COMMENT "Checking code format"
 )

@@ -14,8 +14,7 @@ class attribute;
 
 namespace pza
 {
-struct itf_info
-{
+struct itf_info {
 	std::string bench;
 	std::string device_name;
 	std::string name;
